@@ -5,32 +5,28 @@ const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="py-8 px-4 border-t border-border bg-background">
-      <div className="executive-container">
-        <div className="space-y-3">
-          <p className="footer-text">
-            © {currentYear} Arnab Sinha
-          </p>
-          <p className="footer-text">
-            <Link to="/privacy" className="footer-link">Privacy Policy</Link>
-            {' | '}
-            <Link to="/terms" className="footer-link">Terms</Link>
-          </p>
-          <div className="space-y-1 mt-4">
-            <p className="footer-text">
-              This site is not a part of the Facebook website or Facebook Inc.
-            </p>
-            <p className="footer-text">
-              Additionally, This site is NOT endorsed by Facebook in any way.
-            </p>
-            <p className="footer-text">
-              FACEBOOK is a trademark of FACEBOOK, Inc.
-            </p>
-          </div>
+    <footer className="bg-background border-t border-border py-6 mt-12">
+      <div className="executive-container text-center text-sm text-muted-foreground">
+        <div className="mb-4">
+          © {currentYear} Arnab Sinha
+        </div>
+        <div className="flex justify-center space-x-6">
+          <Link
+            to="/privacy"
+            className="hover:text-foreground transition-colors"
+          >
+            Privacy Policy
+          </Link>
+          <Link
+            to="/terms"
+            className="hover:text-foreground transition-colors"
+          >
+            Terms of Service
+          </Link>
         </div>
       </div>
     </footer>
   );
 };
 
-export default Footer;
+export default React.memo(Footer);

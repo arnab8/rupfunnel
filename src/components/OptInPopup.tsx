@@ -143,4 +143,4 @@ const OptInPopup: React.FC<OptInPopupProps> = ({ isOpen, onClose, onSubmit, isSu
   );
 };
 
-export default OptInPopup;
+export default React.memo(OptInPopup);

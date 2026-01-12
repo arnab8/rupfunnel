@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,10 +12,12 @@ import Index from "./pages/Index";
 import Training from "./pages/Training";
 import Book from "./pages/Book";
 import Congrats from "./pages/Congrats";
-import Admin from "./pages/Admin";
-import Privacy from "./pages/Privacy";
-import Terms from "./pages/Terms";
-import NotFound from "./pages/NotFound";
+
+// Lazy load non-critical pages
+const Admin = lazy(() => import("./pages/Admin"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Terms = lazy(() => import("./pages/Terms"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
 
@@ -124,10 +126,38 @@ const App = () => {
                 <Route path="/training" element={<Training />} />
                 <Route path="/book" element={<Book />} />
                 <Route path="/congrats" element={<Congrats />} />
-                <Route path="/admin" element={<Admin />} />
-                <Route path="/privacy" element={<Privacy />} />
-                <Route path="/terms" element={<Terms />} />
-                <Route path="*" element={<NotFound />} />
+                <Route
+                  path="/admin"
+                  element={
+                    <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
+                      <Admin />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="/privacy"
+                  element={
+                    <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
+                      <Privacy />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="/terms"
+                  element={
+                    <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
+                      <Terms />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="*"
+                  element={
+                    <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
+                      <NotFound />
+                    </Suspense>
+                  }
+                />
               </Routes>
             </BrowserRouter>
           </TooltipProvider>
