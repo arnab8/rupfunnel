@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@/contexts/UserContext';
 import { useAdmin } from '@/contexts/AdminContext';
@@ -10,6 +10,7 @@ const Training: React.FC = () => {
   const { userData, isLoaded } = useUser();
   const { config } = useAdmin();
   const navigate = useNavigate();
+  const videoContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Redirect if no user data
@@ -31,13 +32,40 @@ const Training: React.FC = () => {
     navigate('/book');
   };
 
+  // Execute Wistia embed code scripts when config changes
+  useEffect(() => {
+    if (config.wistiaEmbedCode && videoContainerRef.current) {
+      // Clear existing content
+      videoContainerRef.current.innerHTML = config.wistiaEmbedCode;
+      
+      // Find and execute any script tags
+      const scripts = videoContainerRef.current.querySelectorAll('script');
+      scripts.forEach((oldScript) => {
+        const newScript = document.createElement('script');
+        
+        // Copy all attributes
+        Array.from(oldScript.attributes).forEach((attr) => {
+          newScript.setAttribute(attr.name, attr.value);
+        });
+        
+        // Copy inline script content
+        if (oldScript.textContent) {
+          newScript.textContent = oldScript.textContent;
+        }
+        
+        // Replace old script with new one to trigger execution
+        oldScript.parentNode?.replaceChild(newScript, oldScript);
+      });
+    }
+  }, [config.wistiaEmbedCode]);
+
   // Default Wistia embed or custom embed code
   const renderVideoPlayer = () => {
     if (config.wistiaEmbedCode) {
       return (
         <div 
-          className="aspect-video w-full"
-          dangerouslySetInnerHTML={{ __html: config.wistiaEmbedCode }}
+          ref={videoContainerRef}
+          className="aspect-video w-full [&_.wistia_responsive_padding]:!p-0 [&_.wistia_responsive_wrapper]:!relative [&_iframe]:!w-full [&_iframe]:!h-full"
         />
       );
     }
