@@ -8,6 +8,7 @@ import OptInPopup from '@/components/OptInPopup';
 import VideoThumbnail from '@/components/VideoThumbnail';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 const Index: React.FC = () => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -15,6 +16,7 @@ const Index: React.FC = () => {
   const { userData, setUserData, isLoaded } = useUser();
   const { config } = useAdmin();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     // If user already exists, redirect to training
@@ -58,6 +60,39 @@ const Index: React.FC = () => {
         fbc,
       };
 
+      // Send to MailerLite via Netlify Function
+      // The MAILERLITE_API_KEY must be set in Netlify Dashboard → Site Settings → Environment Variables
+      const subscribeResponse = await fetch('/.netlify/functions/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fullName: formData.fullName,
+          phone: formData.phone,
+          email: formData.email,
+          designation: formData.jobRole,
+          utmCampaign: utmParams.utmCampaign || '',
+          utmContent: utmParams.utmContent || '',
+          tags: ['Lead'],
+          groupId: config.mailerLiteGroupId || '',
+        }),
+      });
+
+      const subscribeResult = await subscribeResponse.json();
+
+      if (!subscribeResponse.ok) {
+        console.error('MailerLite subscription error:', subscribeResult);
+        // Show error but don't block the user from continuing
+        toast({
+          title: "Subscription Notice",
+          description: "We couldn't add you to our list, but you can still watch the video.",
+          variant: "destructive",
+        });
+      } else {
+        console.log('MailerLite subscription successful:', subscribeResult);
+      }
+
       // Save to context and localStorage
       setUserData(fullUserData);
 
@@ -71,6 +106,11 @@ const Index: React.FC = () => {
       navigate('/training');
     } catch (error) {
       console.error('Form submission error:', error);
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
