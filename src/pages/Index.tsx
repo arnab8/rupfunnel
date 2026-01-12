@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useUser } from '@/contexts/UserContext';
-import { useAdmin } from '@/contexts/AdminContext';
-import { captureUtmParams, triggerPixelEvent, getCookie } from '@/lib/tracking';
-import { OptInFormData } from '@/lib/validation';
-import OptInPopup from '@/components/OptInPopup';
-import VideoThumbnail from '@/components/VideoThumbnail';
-import Footer from '@/components/Footer';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useUser } from "@/contexts/UserContext";
+import { useAdmin } from "@/contexts/AdminContext";
+import { captureUtmParams, triggerPixelEvent, getCookie } from "@/lib/tracking";
+import { OptInFormData } from "@/lib/validation";
+import OptInPopup from "@/components/OptInPopup";
+import VideoThumbnail from "@/components/VideoThumbnail";
+import Footer from "@/components/Footer";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 const Index: React.FC = () => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -43,8 +43,8 @@ const Index: React.FC = () => {
     try {
       // Capture UTM parameters and Facebook cookies
       const utmParams = captureUtmParams();
-      const fbp = getCookie('_fbp');
-      const fbc = getCookie('_fbc');
+      const fbp = getCookie("_fbp");
+      const fbc = getCookie("_fbc");
 
       const fullUserData = {
         fullName: formData.fullName,
@@ -59,50 +59,51 @@ const Index: React.FC = () => {
 
       // Send to MailerLite via Netlify Function
       // The MAILERLITE_API_KEY must be set in Netlify Dashboard → Site Settings → Environment Variables
-      const subscribeResponse = await fetch('/.netlify/functions/subscribe', {
-        method: 'POST',
+      const subscribeResponse = await fetch("/.netlify/functions/subscribe", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           fullName: formData.fullName,
           phone: formData.phone,
           email: formData.email,
           designation: formData.jobRole,
-          utmCampaign: utmParams.utmCampaign || '',
-          utmContent: utmParams.utmContent || '',
-          tags: ['Lead'],
-          groupId: config.mailerLiteGroupId || '',
+          utmCampaign: utmParams.utmCampaign || "",
+          utmContent: utmParams.utmContent || "",
+          tags: ["Lead"],
+          groupId: config.mailerLiteGroupId || "",
         }),
       });
 
       const subscribeResult = await subscribeResponse.json();
 
       if (!subscribeResponse.ok) {
-        console.error('MailerLite subscription error:', subscribeResult);
+        console.error("MailerLite subscription error:", subscribeResult);
         // Show error but don't block the user from continuing
         toast({
           title: "Subscription Notice",
-          description: "We couldn't add you to our list, but you can still watch the video.",
+          description:
+            "We couldn't add you to our list, but you can still watch the video.",
           variant: "destructive",
         });
       } else {
-        console.log('MailerLite subscription successful:', subscribeResult);
+        console.log("MailerLite subscription successful:", subscribeResult);
       }
 
       // Save to context and localStorage
       setUserData(fullUserData);
 
       // Trigger browser Lead event
-      triggerPixelEvent('Lead', {
-        content_name: 'VSL Opt-in',
-        content_category: 'Executive Training',
+      triggerPixelEvent("Lead", {
+        content_name: "VSL Opt-in",
+        content_category: "Executive Training",
       });
 
       // Navigate to training page
-      navigate('/training');
+      navigate("/training");
     } catch (error) {
-      console.error('Form submission error:', error);
+      console.error("Form submission error:", error);
       toast({
         title: "Error",
         description: "Something went wrong. Please try again.",
@@ -114,8 +115,8 @@ const Index: React.FC = () => {
   };
 
   const benefits = [
-    '5 Secrets that most corporate leadership experts hide from you',
-    '8 Detailed case studies of executives taking bigger and more strategic roles',
+    "5 Secrets that most corporate leadership experts hide from you",
+    "8 Detailed case studies of executives taking bigger and more strategic roles",
     "Discover the unique, science-backed system that's designed to elevate your executive presence, improve strategic decision-making, and position you for leadership roles in record time, without guesswork or frustration.",
   ];
 
@@ -129,10 +130,12 @@ const Index: React.FC = () => {
               For Directors, AVPs, VPs & CXOs
             </p>
             <h1 className="executive-heading mb-4">
-              How to Unlock High Value Leadership Opportunities & Get Rid of Your Career Plateau in 12 Weeks
+              How to Unlock High Value Leadership Opportunities & Get Rid of
+              Your Career Plateau in 12 Weeks
             </h1>
             <p className="executive-subheading max-w-3xl mx-auto mb-12">
-              Without Endless Certifications, Networking, Working Endlessly, or Hoping & Praying for the Leadership Sun to Shine on You
+              Without Endless Certifications, Networking, Working Endlessly, or
+              Hoping & Praying for the Leadership Sun to Shine on You
             </p>
           </div>
         </section>
@@ -160,10 +163,7 @@ const Index: React.FC = () => {
                   ))}
                 </ul>
 
-                <Button 
-                  onClick={handleCtaClick}
-                  className="executive-button mt-8"
-                >
+                <Button onClick={handleCtaClick} className="executive-button mt-8">
                   Click Here to Get Access
                 </Button>
               </div>

@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useUser } from '@/contexts/UserContext';
-import { useAdmin } from '@/contexts/AdminContext';
-import Footer from '@/components/Footer';
+import React, { useEffect, useMemo, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { useUser } from "@/contexts/UserContext";
+import { useAdmin } from "@/contexts/AdminContext";
+import Footer from "@/components/Footer";
 
 const Book: React.FC = () => {
   const { userData, isLoaded } = useUser();
@@ -13,34 +13,36 @@ const Book: React.FC = () => {
   useEffect(() => {
     // Redirect if no user data
     if (isLoaded && !userData) {
-      navigate('/');
+      navigate("/");
     }
   }, [isLoaded, userData, navigate]);
 
   // Check if the calComBookingSlug looks like embed code (contains HTML tags)
-  const isEmbedCode = config.calComBookingSlug?.includes('<') && config.calComBookingSlug?.includes('>');
+  const isEmbedCode =
+    config.calComBookingSlug?.includes("<") &&
+    config.calComBookingSlug?.includes(">");
 
   // Execute Cal.com embed code scripts when config changes
   useEffect(() => {
     if (isEmbedCode && config.calComBookingSlug && embedContainerRef.current) {
       // Clear existing content
       embedContainerRef.current.innerHTML = config.calComBookingSlug;
-      
+
       // Find and execute any script tags
-      const scripts = embedContainerRef.current.querySelectorAll('script');
+      const scripts = embedContainerRef.current.querySelectorAll("script");
       scripts.forEach((oldScript) => {
-        const newScript = document.createElement('script');
-        
+        const newScript = document.createElement("script");
+
         // Copy all attributes
         Array.from(oldScript.attributes).forEach((attr) => {
           newScript.setAttribute(attr.name, attr.value);
         });
-        
+
         // Copy inline script content
         if (oldScript.textContent) {
           newScript.textContent = oldScript.textContent;
         }
-        
+
         // Replace old script with new one to trigger execution
         oldScript.parentNode?.replaceChild(newScript, oldScript);
       });
@@ -49,14 +51,14 @@ const Book: React.FC = () => {
 
   // Build Cal.com URL with prefilled data (only used when not embed code)
   const calComUrl = useMemo(() => {
-    if (!config.calComBookingSlug || isEmbedCode) return '';
+    if (!config.calComBookingSlug || isEmbedCode) return "";
 
     const baseUrl = `https://cal.com/${config.calComBookingSlug}`;
     const params = new URLSearchParams();
 
-    if (userData?.fullName) params.set('name', userData.fullName);
-    if (userData?.email) params.set('email', userData.email);
-    if (userData?.phone) params.set('phone', userData.phone);
+    if (userData?.fullName) params.set("name", userData.fullName);
+    if (userData?.email) params.set("email", userData.email);
+    if (userData?.phone) params.set("phone", userData.phone);
 
     const queryString = params.toString();
     return queryString ? `${baseUrl}?${queryString}` : baseUrl;
@@ -76,7 +78,7 @@ const Book: React.FC = () => {
         <div className="max-w-5xl mx-auto px-4">
           {isEmbedCode ? (
             // Render raw embed code with script execution
-            <div 
+            <div
               ref={embedContainerRef}
               className="bg-card rounded-lg shadow-lg overflow-hidden min-h-[700px]"
             />
@@ -97,21 +99,27 @@ const Book: React.FC = () => {
                 Apply to Work with The First Time CEO
               </h2>
               <p className="text-muted-foreground mb-6">
-                Please configure the Cal.com booking slug in the admin dashboard to enable scheduling.
+                Please configure the Cal.com booking slug in the admin dashboard
+                to enable scheduling.
               </p>
-              
+
               {/* Placeholder calendar UI */}
               <div className="grid md:grid-cols-2 gap-8 text-left">
                 <div className="space-y-4">
-                  <h3 className="font-semibold text-lg">Apply to Work with The First Time CEO</h3>
+                  <h3 className="font-semibold text-lg">
+                    Apply to Work with The First Time CEO
+                  </h3>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <span>🕐</span> 60 Mins
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Please Select Your Preferred Date & Complete The Application To Reserve 20 Min Strategy Session
+                    Please Select Your Preferred Date & Complete The Application
+                    To Reserve 20 Min Strategy Session
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Note: Your time is valuable to us. Please book a slot that has 100% guarantee of your availability to ensure the time of both (yours and ours) is utilized effectively.
+                    Note: Your time is valuable to us. Please book a slot that
+                    has 100% guarantee of your availability to ensure the time
+                    of both (yours and ours) is utilized effectively.
                   </p>
                 </div>
                 <div className="bg-muted rounded-lg p-6">

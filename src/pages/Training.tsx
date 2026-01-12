@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useUser } from '@/contexts/UserContext';
-import { useAdmin } from '@/contexts/AdminContext';
-import Footer from '@/components/Footer';
-import { Button } from '@/components/ui/button';
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { useUser } from "@/contexts/UserContext";
+import { useAdmin } from "@/contexts/AdminContext";
+import Footer from "@/components/Footer";
+import { Button } from "@/components/ui/button";
 
 const Training: React.FC = () => {
   const [showButton, setShowButton] = useState(false);
@@ -15,7 +15,7 @@ const Training: React.FC = () => {
   useEffect(() => {
     // Redirect if no user data
     if (isLoaded && !userData) {
-      navigate('/');
+      navigate("/");
     }
   }, [isLoaded, userData, navigate]);
 
@@ -29,7 +29,7 @@ const Training: React.FC = () => {
   }, [config.vslButtonDelay]);
 
   const handleApplyNow = () => {
-    navigate('/book');
+    navigate("/book");
   };
 
   // Execute Wistia embed code scripts when config changes
@@ -37,22 +37,22 @@ const Training: React.FC = () => {
     if (config.wistiaEmbedCode && videoContainerRef.current) {
       // Clear existing content
       videoContainerRef.current.innerHTML = config.wistiaEmbedCode;
-      
+
       // Find and execute any script tags
-      const scripts = videoContainerRef.current.querySelectorAll('script');
+      const scripts = videoContainerRef.current.querySelectorAll("script");
       scripts.forEach((oldScript) => {
-        const newScript = document.createElement('script');
-        
+        const newScript = document.createElement("script");
+
         // Copy all attributes
         Array.from(oldScript.attributes).forEach((attr) => {
           newScript.setAttribute(attr.name, attr.value);
         });
-        
+
         // Copy inline script content
         if (oldScript.textContent) {
           newScript.textContent = oldScript.textContent;
         }
-        
+
         // Replace old script with new one to trigger execution
         oldScript.parentNode?.replaceChild(newScript, oldScript);
       });
@@ -63,7 +63,7 @@ const Training: React.FC = () => {
   const renderVideoPlayer = () => {
     if (config.wistiaEmbedCode) {
       return (
-        <div 
+        <div
           ref={videoContainerRef}
           className="aspect-video w-full [&_.wistia_responsive_padding]:!p-0 [&_.wistia_responsive_wrapper]:!relative [&_iframe]:!w-full [&_iframe]:!h-full"
         />
@@ -77,7 +77,9 @@ const Training: React.FC = () => {
           {/* CEO Logo */}
           <div className="absolute top-6 left-6 flex items-center gap-2">
             <div className="w-10 h-10 bg-primary rounded flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">1</span>
+              <span className="text-primary-foreground font-bold text-sm">
+                1
+              </span>
             </div>
             <div className="text-primary">
               <span className="text-xs font-medium">THE FIRST TIME</span>
@@ -86,10 +88,12 @@ const Training: React.FC = () => {
           </div>
 
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-primary text-center leading-tight mt-8">
-            How to Unlock C-Suite, V-Suite or D-Suite Opportunities & Get Rid of Your Career Plateau in 12 Weeks
+            How to Unlock C-Suite, V-Suite or D-Suite Opportunities & Get Rid
+            of Your Career Plateau in 12 Weeks
           </h2>
           <p className="text-primary/80 text-center mt-4 text-sm sm:text-base">
-            Without Endless Certifications, Networking, Working Endlessly, or Hoping & Praying for the Leadership Sun to Shine on You
+            Without Endless Certifications, Networking, Working Endlessly, or
+            Hoping & Praying for the Leadership Sun to Shine on You
           </p>
 
           {/* Play button indicator */}
@@ -130,18 +134,18 @@ const Training: React.FC = () => {
       <main className="flex-1 py-8 sm:py-12">
         <div className="executive-container">
           {/* Video Player */}
-          <div className="max-w-4xl mx-auto mb-8">
-            {renderVideoPlayer()}
-          </div>
+          <div className="max-w-4xl mx-auto mb-8">{renderVideoPlayer()}</div>
 
           {/* Apply Now Button */}
           <div className="text-center">
-            <div 
+            <div
               className={`transition-all duration-500 ${
-                showButton ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-4'
+                showButton
+                  ? "opacity-100 transform translate-y-0"
+                  : "opacity-0 transform translate-y-4"
               }`}
             >
-              <Button 
+              <Button
                 onClick={handleApplyNow}
                 className="executive-button"
                 disabled={!showButton}
@@ -149,7 +153,7 @@ const Training: React.FC = () => {
                 Apply Now
               </Button>
             </div>
-            
+
             {!showButton && (
               <p className="text-muted-foreground text-sm mt-4">
                 Watch the video to unlock the application...
