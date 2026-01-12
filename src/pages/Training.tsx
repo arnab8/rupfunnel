@@ -129,6 +129,18 @@ const Training: React.FC = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <main className="flex-1 py-8 sm:py-12">
         <div className="executive-container">
+          <section className="py-2 sm:py-4 lg:py-6">
+            <div className="text-center">
+              <h1 className="executive-heading mb-4">
+                The operating system that separates reactive leaders from calm, dominant decision-makers
+              </h1>
+              <p className="executive-subheading max-w-3xl mx-auto mb-0">
+                By the end of this 17-minute video, you will see how top performers train their biology and mind to stay
+                composed and powerful under sustained pressure.
+              </p>
+            </div>
+          </section>
+
           {/* Video Player */}
           <div className="max-w-4xl mx-auto mb-8">{renderVideoPlayer()}</div>
 

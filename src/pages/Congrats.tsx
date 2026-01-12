@@ -17,6 +17,25 @@ const Congrats: React.FC = () => {
       navigate('/');
       return;
     }
+  }, [isLoaded, userData, navigate]);
+
+  useEffect(() => {
+    if (!isLoaded || !userData) return;
+
+    const emailKey = userData.email?.toLowerCase().trim();
+    const idempotencyKey = emailKey ? `executive_funnel_submit_application_sent_${emailKey}` : null;
+
+    if (idempotencyKey) {
+      try {
+        const alreadySent = localStorage.getItem(idempotencyKey);
+        if (alreadySent) {
+          return;
+        }
+        localStorage.setItem(idempotencyKey, String(Date.now()));
+      } catch (error) {
+        console.warn('Unable to access localStorage for idempotency:', error);
+      }
+    }
 
     // Trigger SubmitApplication event
     if (isLoaded && userData) {
@@ -67,7 +86,7 @@ const Congrats: React.FC = () => {
           console.warn('Error updating MailerLite tag:', error);
         });
     }
-  }, [isLoaded, userData, navigate, config]);
+  }, [isLoaded, userData, config]);
 
   if (!isLoaded) {
     return (

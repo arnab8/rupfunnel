@@ -9,7 +9,7 @@ const Footer: React.FC = () => {
       <div className="executive-container">
         <div className="space-y-3">
           <p className="footer-text">
-            © The First Time CEO {currentYear}
+            © {currentYear} Arnab Sinha
           </p>
           <p className="footer-text">
             <Link to="/privacy" className="footer-link">Privacy Policy</Link>

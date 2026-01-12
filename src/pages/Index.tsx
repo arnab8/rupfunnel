@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 const Index: React.FC = () => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { userData, setUserData, isLoaded } = useUser();
+  const { userData, setUserData } = useUser();
   const { config } = useAdmin();
   const navigate = useNavigate();
   const { toast } = useToast();
