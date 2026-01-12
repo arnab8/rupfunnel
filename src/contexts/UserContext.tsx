@@ -9,6 +9,7 @@ export interface UserData {
   utmContent?: string;
   fbp?: string;
   fbc?: string;
+  externalId?: string;
 }
 
 interface UserContextType {

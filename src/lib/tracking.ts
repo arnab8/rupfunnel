@@ -109,6 +109,18 @@ export function generateEventId(): string {
   return `${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
 }
 
+// Device fingerprinting helpers
+export function getDeviceFingerprint() {
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  return {
+    screen_resolution: `${screen.width}x${screen.height}`,
+    browser_language: navigator.language || (navigator as any).userLanguage || 'en',
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+    device_type: isMobile ? 'mobile' : 'desktop',
+    user_agent: navigator.userAgent,
+  };
+}
+
 /**
  * Trigger Meta Pixel event (browser-side)
  * 
@@ -165,6 +177,7 @@ export async function sendCapiEvent(
   try {
     const formattedData = await formatUserDataForMeta(userData);
     const eventId = generateEventId();
+    const deviceFingerprint = getDeviceFingerprint();
 
     const response = await fetch('/.netlify/functions/meta-capi', {
       method: 'POST',
@@ -179,6 +192,8 @@ export async function sendCapiEvent(
         eventTime: Math.floor(Date.now() / 1000),
         sourceUrl: window.location.href,
         userAgent: navigator.userAgent,
+        deviceFingerprint,
+        externalId: (userData as any).externalId || undefined,
       }),
     });
 

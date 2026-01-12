@@ -28,6 +28,10 @@ export interface AdminConfig {
   // Delays
   popupDelay: number;
   vslButtonDelay: number;
+
+  // External CRM ID
+  enableExternalIdField: boolean;
+  externalIdFieldLabel: string;
 }
 
 interface AdminContextType {
@@ -54,6 +58,10 @@ const defaultConfig: AdminConfig = {
   homeThumbnailUrl: '', // Add thumbnail URL
   popupDelay: 30, // Show popup after 30 seconds (configurable in Admin panel)
   vslButtonDelay: parseInt(import.meta.env.VITE_VSL_BUTTON_DELAY || '30'),
+
+  // External CRM ID
+  enableExternalIdField: false,
+  externalIdFieldLabel: 'External CRM ID (optional)',
 };
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);

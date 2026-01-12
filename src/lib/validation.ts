@@ -65,6 +65,8 @@ export const optInFormSchema = z.object({
     .trim()
     .min(2, 'Please enter your current designation')
     .max(100, 'Designation must be less than 100 characters'),
+
+  externalId: z.string().trim().optional(),
 });
 
 export type OptInFormData = z.infer<typeof optInFormSchema>;

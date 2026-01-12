@@ -56,6 +56,7 @@ const Index: React.FC = () => {
         utmContent: utmParams.utmContent,
         fbp,
         fbc,
+        externalId: formData.externalId,
       };
 
       // Send to MailerLite via Netlify Function
@@ -74,6 +75,7 @@ const Index: React.FC = () => {
           utmContent: utmParams.utmContent || "",
           tags: ["Lead"],
           groupId: config.mailerLiteGroupId || "",
+          ...(formData.externalId && { externalId: formData.externalId }),
         }),
       });
 

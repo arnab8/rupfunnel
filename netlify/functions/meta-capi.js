@@ -109,6 +109,8 @@ exports.handler = async (event) => {
       eventTime,
       sourceUrl,
       userAgent: frontendUserAgent,
+      deviceFingerprint,
+      externalId,
     } = body;
 
     if (!eventName) {
@@ -138,8 +140,8 @@ exports.handler = async (event) => {
       // Last name (hashed)
       ln: userData?.ln || (await hashValue(userData?.lastName || '')),
       
-      // External ID (usually email, hashed)
-      external_id: userData?.external_id || (await hashValue(normalizeEmail(userData?.email || ''))),
+      // External ID (usually email, hashed) or provided externalId
+      external_id: externalId ? await hashValue(normalizeEmail(externalId)) : (userData?.external_id || (await hashValue(normalizeEmail(userData?.email || '')))),
       
       // IP address (hashed) - server provides authoritative value
       ...(clientIp && { ge: await hashValue(clientIp) }),
@@ -173,6 +175,12 @@ exports.handler = async (event) => {
       custom_data: {
         currency: userData?.currency || 'USD',
         value: userData?.value || 0,
+        ...(deviceFingerprint && {
+          screen_resolution: deviceFingerprint.screen_resolution,
+          browser_language: deviceFingerprint.browser_language,
+          timezone: deviceFingerprint.timezone,
+          device_type: deviceFingerprint.device_type,
+        }),
       },
     };
 

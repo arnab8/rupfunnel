@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { X } from 'lucide-react';
 import { optInFormSchema, OptInFormData } from '@/lib/validation';
+import { useAdmin } from '@/contexts/AdminContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,6 +16,7 @@ interface OptInPopupProps {
 }
 
 const OptInPopup: React.FC<OptInPopupProps> = ({ isOpen, onClose, onSubmit, isSubmitting }) => {
+  const { config } = useAdmin();
   const {
     register,
     handleSubmit,
@@ -22,6 +24,9 @@ const OptInPopup: React.FC<OptInPopupProps> = ({ isOpen, onClose, onSubmit, isSu
   } = useForm<OptInFormData>({
     resolver: zodResolver(optInFormSchema),
   });
+
+  const showExternalId = config.enableExternalIdField ?? false;
+  const externalIdLabel = config.externalIdFieldLabel ?? 'External CRM ID (optional)';
 
   if (!isOpen) return null;
 
@@ -107,6 +112,23 @@ const OptInPopup: React.FC<OptInPopupProps> = ({ isOpen, onClose, onSubmit, isSu
                 <p className="text-destructive text-sm mt-1">{errors.jobRole.message}</p>
               )}
             </div>
+
+            {showExternalId && (
+              <div>
+                <Label htmlFor="externalId" className="executive-label">
+                  {externalIdLabel}
+                </Label>
+                <Input
+                  id="externalId"
+                  {...register('externalId')}
+                  placeholder={externalIdLabel}
+                  className="executive-input"
+                />
+                {errors.externalId && (
+                  <p className="text-destructive text-sm mt-1">{errors.externalId.message}</p>
+                )}
+              </div>
+            )}
 
             <Button
               type="submit"
