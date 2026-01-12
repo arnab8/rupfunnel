@@ -18,12 +18,9 @@ const Index: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  useEffect(() => {
-    // If user already exists, redirect to training
-    if (isLoaded && userData) {
-      navigate('/training');
-    }
-  }, [isLoaded, userData, navigate]);
+  // NOTE: Removed auto-redirect to /training when userData exists
+  // This allows returning users to access the opt-in page
+  // They can watch the video again or click through to /training manually
 
   useEffect(() => {
     // Show popup after delay

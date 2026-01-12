@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@/contexts/UserContext';
 import { useAdmin } from '@/contexts/AdminContext';
@@ -8,6 +8,7 @@ const Book: React.FC = () => {
   const { userData, isLoaded } = useUser();
   const { config } = useAdmin();
   const navigate = useNavigate();
+  const embedContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Redirect if no user data
@@ -16,9 +17,39 @@ const Book: React.FC = () => {
     }
   }, [isLoaded, userData, navigate]);
 
-  // Build Cal.com URL with prefilled data
+  // Check if the calComBookingSlug looks like embed code (contains HTML tags)
+  const isEmbedCode = config.calComBookingSlug?.includes('<') && config.calComBookingSlug?.includes('>');
+
+  // Execute Cal.com embed code scripts when config changes
+  useEffect(() => {
+    if (isEmbedCode && config.calComBookingSlug && embedContainerRef.current) {
+      // Clear existing content
+      embedContainerRef.current.innerHTML = config.calComBookingSlug;
+      
+      // Find and execute any script tags
+      const scripts = embedContainerRef.current.querySelectorAll('script');
+      scripts.forEach((oldScript) => {
+        const newScript = document.createElement('script');
+        
+        // Copy all attributes
+        Array.from(oldScript.attributes).forEach((attr) => {
+          newScript.setAttribute(attr.name, attr.value);
+        });
+        
+        // Copy inline script content
+        if (oldScript.textContent) {
+          newScript.textContent = oldScript.textContent;
+        }
+        
+        // Replace old script with new one to trigger execution
+        oldScript.parentNode?.replaceChild(newScript, oldScript);
+      });
+    }
+  }, [config.calComBookingSlug, isEmbedCode]);
+
+  // Build Cal.com URL with prefilled data (only used when not embed code)
   const calComUrl = useMemo(() => {
-    if (!config.calComBookingSlug) return '';
+    if (!config.calComBookingSlug || isEmbedCode) return '';
 
     const baseUrl = `https://cal.com/${config.calComBookingSlug}`;
     const params = new URLSearchParams();
@@ -29,7 +60,7 @@ const Book: React.FC = () => {
 
     const queryString = params.toString();
     return queryString ? `${baseUrl}?${queryString}` : baseUrl;
-  }, [config.calComBookingSlug, userData]);
+  }, [config.calComBookingSlug, userData, isEmbedCode]);
 
   if (!isLoaded) {
     return (
@@ -43,7 +74,13 @@ const Book: React.FC = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <main className="flex-1 py-8 sm:py-12">
         <div className="max-w-5xl mx-auto px-4">
-          {calComUrl ? (
+          {isEmbedCode ? (
+            // Render raw embed code with script execution
+            <div 
+              ref={embedContainerRef}
+              className="bg-card rounded-lg shadow-lg overflow-hidden min-h-[700px]"
+            />
+          ) : calComUrl ? (
             <div className="bg-card rounded-lg shadow-lg overflow-hidden">
               <iframe
                 src={calComUrl}
