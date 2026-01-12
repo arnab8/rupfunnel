@@ -1,15 +1,15 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@/contexts/UserContext';
 import { useAdmin } from '@/contexts/AdminContext';
 import { triggerPixelEvent, sendCapiEvent } from '@/lib/tracking';
 import Footer from '@/components/Footer';
-import { CheckCircle } from 'lucide-react';
 
 const Congrats: React.FC = () => {
   const { userData, isLoaded } = useUser();
   const { config } = useAdmin();
   const navigate = useNavigate();
+  const [profileSrc, setProfileSrc] = useState('/profile.jpg');
 
   useEffect(() => {
     // Redirect if no user data
@@ -103,23 +103,22 @@ const Congrats: React.FC = () => {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Image placeholder */}
             <div className="aspect-[4/5] bg-gradient-to-br from-muted to-muted/50 rounded-lg overflow-hidden">
-              <div className="w-full h-full flex items-center justify-center">
-                <div className="text-center p-8">
-                  <div className="w-32 h-32 mx-auto mb-4 bg-secondary rounded-full flex items-center justify-center">
-                    <CheckCircle className="w-16 h-16 text-primary" />
-                  </div>
-                  <p className="text-muted-foreground">Profile Image</p>
-                </div>
-              </div>
+              <img
+                src={profileSrc}
+                alt="Arnab Sinha"
+                className="w-full h-full object-cover"
+                onError={() => {
+                  if (profileSrc !== '/thumbnail.png') {
+                    setProfileSrc('/thumbnail.png');
+                  }
+                }}
+              />
             </div>
 
             {/* Content */}
             <div className="space-y-6">
               <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-6 h-6 text-green-500" />
-                  <p className="text-lg font-semibold text-green-600">Booking Confirmed</p>
-                </div>
+                <p className="text-lg font-semibold text-green-600">Booking Confirmed</p>
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground leading-tight">
                   Congratulations, your application is being reviewed.
                 </h1>
