@@ -1,5 +1,49 @@
 import { UserData } from '@/contexts/UserContext';
 
+declare global {
+  interface Window {
+    fbq?: (event: string, name: string, data?: Record<string, unknown>, options?: Record<string, unknown>) => void;
+  }
+}
+
+/**
+ * Initialize Meta Pixel
+ * Must be called once with the pixel ID before any events are tracked
+ */
+export function initializeMetaPixel(pixelId: string) {
+  if (!pixelId) {
+    console.warn('initializeMetaPixel: pixelId is empty');
+    return;
+  }
+
+  if (typeof window === 'undefined') return;
+
+  // Check if pixel is already initialized
+  if ((window as any).fbq) {
+    console.log('Meta Pixel already initialized');
+    return;
+  }
+
+  // Initialize Meta Pixel script
+  const script = document.createElement('script');
+  script.async = true;
+  script.src = `https://connect.facebook.net/en_US/fbevents.js`;
+  
+  script.onload = () => {
+    if ((window as any).fbq) {
+      (window as any).fbq('init', pixelId);
+      (window as any).fbq('track', 'PageView');
+      console.log('Meta Pixel initialized with ID:', pixelId);
+    }
+  };
+
+  script.onerror = () => {
+    console.error('Failed to load Meta Pixel script');
+  };
+
+  document.head.appendChild(script);
+}
+
 // Hash function for Meta CAPI (SHA-256)
 export async function hashValue(value: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -65,29 +109,64 @@ export function generateEventId(): string {
   return `${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
 }
 
-// Trigger Meta Pixel event (browser-side)
-export function triggerPixelEvent(eventName: string, params: Record<string, unknown> = {}) {
-  if (typeof window !== 'undefined' && (window as any).fbq) {
-    const eventId = generateEventId();
-    (window as any).fbq('track', eventName, params, { eventID: eventId });
-    return eventId;
+/**
+ * Trigger Meta Pixel event (browser-side)
+ * 
+ * This sends data to the browser pixel for immediate processing.
+ * For better matching, also call sendCapiEvent() to send server-side.
+ */
+export function triggerPixelEvent(
+  eventName: string,
+  params: Record<string, unknown> = {},
+  advancedMatching?: Record<string, unknown>
+) {
+  if (typeof window === 'undefined' || !(window as any).fbq) {
+    console.warn(`triggerPixelEvent: fbq not available for event ${eventName}`);
+    return null;
   }
-  return null;
+
+  const eventId = generateEventId();
+
+  // Combine standard params with advanced matching data
+  const eventData = {
+    ...params,
+    ...advancedMatching,
+  };
+
+  (window as any).fbq('track', eventName, eventData, { eventID: eventId });
+  console.log(`Pixel event tracked: ${eventName}`, eventId);
+
+  return eventId;
 }
 
-// Send CAPI event to server
+/**
+ * Send CAPI event to server
+ * 
+ * This sends user data to the backend, which enriches it with server-side
+ * information (IP, User-Agent) and sends to Meta's Conversion API.
+ * 
+ * @param eventName - Event name (e.g., 'Lead', 'SubmitApplication')
+ * @param userData - User data to include
+ * @param pixelId - Meta Pixel ID for CAPI endpoint
+ * @param testEventCode - Optional test event code for validation
+ * @returns Event ID if successful, null otherwise
+ */
 export async function sendCapiEvent(
   eventName: string,
   userData: UserData,
-  accessToken: string,
   pixelId: string,
   testEventCode?: string
 ) {
+  if (!pixelId) {
+    console.warn('sendCapiEvent: pixelId is required');
+    return null;
+  }
+
   try {
     const formattedData = await formatUserDataForMeta(userData);
     const eventId = generateEventId();
-    
-    const response = await fetch('/api/meta-capi', {
+
+    const response = await fetch('/.netlify/functions/meta-capi', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -95,9 +174,7 @@ export async function sendCapiEvent(
       body: JSON.stringify({
         eventName,
         userData: formattedData,
-        accessToken,
-        pixelId,
-        testEventCode,
+        testEventCode: testEventCode || undefined,
         eventId,
         eventTime: Math.floor(Date.now() / 1000),
         sourceUrl: window.location.href,
@@ -106,9 +183,13 @@ export async function sendCapiEvent(
     });
 
     if (!response.ok) {
-      throw new Error('CAPI request failed');
+      const error = await response.json();
+      console.error('CAPI event error:', error);
+      return null;
     }
 
+    const result = await response.json();
+    console.log('CAPI event sent successfully:', eventName, eventId);
     return eventId;
   } catch (error) {
     console.error('CAPI event error:', error);
@@ -116,7 +197,30 @@ export async function sendCapiEvent(
   }
 }
 
-// Add subscriber to MailerLite
+/**
+ * Track an event with both browser pixel and server CAPI
+ * 
+ * This is the recommended approach for best event matching.
+ * It sends the same event to both channels for deduplication and better data quality.
+ */
+export async function trackEventWithCapi(
+  eventName: string,
+  userData: UserData,
+  pixelId: string,
+  pixelEventData?: Record<string, unknown>,
+  testEventCode?: string
+) {
+  // Fire browser pixel
+  const pixelEventId = triggerPixelEvent(eventName, pixelEventData);
+
+  // Send to CAPI with same event ID for deduplication
+  // Allow pixel event to fire regardless of CAPI success
+  await sendCapiEvent(eventName, userData, pixelId, testEventCode);
+
+  return pixelEventId;
+}
+
+// Add subscriber to MailerLite (kept for compatibility)
 export async function addToMailerLite(
   userData: UserData,
   apiKey: string,
@@ -124,7 +228,7 @@ export async function addToMailerLite(
   tag: string
 ) {
   try {
-    const response = await fetch('/api/mailerlite', {
+    const response = await fetch('/.netlify/functions/subscribe', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

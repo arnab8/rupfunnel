@@ -283,6 +283,31 @@ const Admin: React.FC = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
+                  <Video className="w-5 h-5" />
+                  Homepage Thumbnail
+                </CardTitle>
+                <CardDescription>Global thumbnail image URL for the homepage hero</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div>
+                  <Label htmlFor="homeThumbnailUrl">Thumbnail URL</Label>
+                  <Input
+                    id="homeThumbnailUrl"
+                    value={localConfig.homeThumbnailUrl}
+                    onChange={(e) => updateConfig('homeThumbnailUrl', e.target.value)}
+                    placeholder="https://example.com/thumbnail.jpg"
+                    className="mt-1"
+                  />
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Leave blank to show the default yellow gradient. Use a CDN or cloud storage URL (e.g., Cloudinary, S3).
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
                   <Calendar className="w-5 h-5" />
                   Cal.com Booking
                 </CardTitle>

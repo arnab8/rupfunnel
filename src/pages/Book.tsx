@@ -5,17 +5,23 @@ import { useAdmin } from "@/contexts/AdminContext";
 import Footer from "@/components/Footer";
 
 const Book: React.FC = () => {
-  const { userData, isLoaded } = useUser();
+  const { userData } = useUser();
   const { config } = useAdmin();
   const navigate = useNavigate();
   const embedContainerRef = useRef<HTMLDivElement>(null);
 
+  // Listen for Cal.com booking events
   useEffect(() => {
-    // Redirect if no user data
-    if (isLoaded && !userData) {
-      navigate("/");
-    }
-  }, [isLoaded, userData, navigate]);
+    const handleMessage = (event: MessageEvent) => {
+      // Cal.com sends booking completion via postMessage
+      if (event.data?.event === "booking_complete" || event.data?.action === "booking.created") {
+        navigate("/congrats");
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [navigate]);
 
   // Check if the calComBookingSlug looks like embed code (contains HTML tags)
   const isEmbedCode =
@@ -25,27 +31,11 @@ const Book: React.FC = () => {
   // Execute Cal.com embed code scripts when config changes
   useEffect(() => {
     if (isEmbedCode && config.calComBookingSlug && embedContainerRef.current) {
-      // Clear existing content
-      embedContainerRef.current.innerHTML = config.calComBookingSlug;
-
-      // Find and execute any script tags
-      const scripts = embedContainerRef.current.querySelectorAll("script");
-      scripts.forEach((oldScript) => {
-        const newScript = document.createElement("script");
-
-        // Copy all attributes
-        Array.from(oldScript.attributes).forEach((attr) => {
-          newScript.setAttribute(attr.name, attr.value);
-        });
-
-        // Copy inline script content
-        if (oldScript.textContent) {
-          newScript.textContent = oldScript.textContent;
-        }
-
-        // Replace old script with new one to trigger execution
-        oldScript.parentNode?.replaceChild(newScript, oldScript);
-      });
+      try {
+        embedContainerRef.current.innerHTML = config.calComBookingSlug;
+      } catch (error) {
+        console.error("Error injecting embed code:", error);
+      }
     }
   }, [config.calComBookingSlug, isEmbedCode]);
 
@@ -59,18 +49,14 @@ const Book: React.FC = () => {
     if (userData?.fullName) params.set("name", userData.fullName);
     if (userData?.email) params.set("email", userData.email);
     if (userData?.phone) params.set("phone", userData.phone);
+    
+    // Add redirect URL to go to congrats page after booking
+    const redirectUrl = `${window.location.origin}/congrats`;
+    params.set("redirectUrl", redirectUrl);
 
     const queryString = params.toString();
     return queryString ? `${baseUrl}?${queryString}` : baseUrl;
   }, [config.calComBookingSlug, userData, isEmbedCode]);
-
-  if (!isLoaded) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">

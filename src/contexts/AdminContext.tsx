@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { ServerConfig } from '@/types/config';
 
 export interface AdminConfig {
   // Meta Tracking
@@ -20,6 +21,9 @@ export interface AdminConfig {
   mailerLiteGroupId: string;
   wistiaEmbedCode: string;
   calComBookingSlug: string;
+  
+  // Thumbnail
+  homeThumbnailUrl: string;
   
   // Delays
   popupDelay: number;
@@ -47,27 +51,53 @@ const defaultConfig: AdminConfig = {
   mailerLiteGroupId: '',
   wistiaEmbedCode: '',
   calComBookingSlug: 'the-first-time-ceo/strategy-session',
-  popupDelay: 0,
-  vslButtonDelay: 30,
+  homeThumbnailUrl: '', // Add thumbnail URL
+  popupDelay: 30, // Show popup after 30 seconds (configurable in Admin panel)
+  vslButtonDelay: parseInt(import.meta.env.VITE_VSL_BUTTON_DELAY || '30'),
 };
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
 const CONFIG_STORAGE_KEY = 'executive_funnel_admin_config';
 const AUTH_STORAGE_KEY = 'executive_funnel_admin_auth';
-const ADMIN_PASSWORD = 'executive2024'; // In production, use proper auth
+const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'executive2024';
 
-export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+interface AdminProviderProps {
+  children: ReactNode;
+  initialServerConfig?: ServerConfig;
+}
+
+export const AdminProvider: React.FC<AdminProviderProps> = ({ 
+  children, 
+  initialServerConfig 
+}) => {
   const [config, setConfigState] = useState<AdminConfig>(defaultConfig);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    // Load config from localStorage
+    // Load config from localStorage (admin overrides)
     try {
       const storedConfig = localStorage.getItem(CONFIG_STORAGE_KEY);
+      let loadedConfig = defaultConfig;
+      
       if (storedConfig) {
-        setConfigState({ ...defaultConfig, ...JSON.parse(storedConfig) });
+        loadedConfig = { ...defaultConfig, ...JSON.parse(storedConfig) };
       }
+      
+      // Merge server config (server config is read-only reference)
+      if (initialServerConfig) {
+        loadedConfig = {
+          ...loadedConfig,
+          metaPixelId: initialServerConfig.metaPixelId || loadedConfig.metaPixelId,
+          headerCodeBlock: initialServerConfig.headerCodeBlock || loadedConfig.headerCodeBlock,
+          mailerLiteGroupId: initialServerConfig.mailerLiteGroupId || loadedConfig.mailerLiteGroupId,
+          wistiaEmbedCode: initialServerConfig.wistiaEmbedCode || loadedConfig.wistiaEmbedCode,
+          calComBookingSlug: initialServerConfig.calComBookingSlug || loadedConfig.calComBookingSlug,
+          homeThumbnailUrl: initialServerConfig.homeThumbnailUrl || loadedConfig.homeThumbnailUrl,
+        };
+      }
+      
+      setConfigState(loadedConfig);
       
       const storedAuth = sessionStorage.getItem(AUTH_STORAGE_KEY);
       if (storedAuth === 'true') {
@@ -76,7 +106,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     } catch (error) {
       console.error('Failed to load admin config:', error);
     }
-  }, []);
+  }, [initialServerConfig]);
 
   const setConfig = (newConfig: AdminConfig) => {
     setConfigState(newConfig);

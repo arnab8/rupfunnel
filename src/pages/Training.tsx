@@ -20,13 +20,9 @@ const Training: React.FC = () => {
   }, [isLoaded, userData, navigate]);
 
   useEffect(() => {
-    // Show Apply Now button after delay
-    const timer = setTimeout(() => {
-      setShowButton(true);
-    }, config.vslButtonDelay * 1000);
-
-    return () => clearTimeout(timer);
-  }, [config.vslButtonDelay]);
+    // Show Apply Now button immediately on page load
+    setShowButton(true);
+  }, []);
 
   const handleApplyNow = () => {
     navigate("/book");

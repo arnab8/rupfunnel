@@ -97,7 +97,6 @@ exports.handler = async (event) => {
       },
     };
 
-    // Add subscriber to MailerLite
     const subscriberResponse = await fetch('https://connect.mailerlite.com/api/subscribers', {
       method: 'POST',
       headers: {
@@ -123,7 +122,52 @@ exports.handler = async (event) => {
 
     const subscriberId = subscriberResult.data?.id;
 
-    // Add subscriber to group if groupId is provided
+    // Handle tags as groups in MailerLite v2
+    // If "Lead" tag is provided, add subscriber to the Lead group
+    if (tags && Array.isArray(tags) && subscriberId) {
+      for (const tag of tags) {
+        // Fetch all groups to find the one matching the tag name
+        try {
+          const groupsResponse = await fetch('https://connect.mailerlite.com/api/groups', {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${apiKey}`,
+            },
+          });
+
+          const groupsData = await groupsResponse.json();
+          const matchingGroup = groupsData.data?.find(g => g.name.toLowerCase() === tag.toLowerCase());
+
+          if (matchingGroup) {
+            // Add subscriber to the matching group
+            const tagGroupResponse = await fetch(
+              `https://connect.mailerlite.com/api/subscribers/${subscriberId}/groups/${matchingGroup.id}`,
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${apiKey}`,
+                },
+              }
+            );
+
+            if (!tagGroupResponse.ok) {
+              const errorText = await tagGroupResponse.text();
+              console.warn(`Failed to add subscriber to tag group '${tag}':`, tagGroupResponse.status, errorText);
+            } else {
+              console.log(`Subscriber added to tag group: ${tag}`);
+            }
+          } else {
+            console.warn(`Tag group '${tag}' not found in MailerLite. Create a group with this name in your MailerLite account.`);
+          }
+        } catch (tagError) {
+          console.warn(`Error processing tag '${tag}':`, tagError);
+        }
+      }
+    }
+
+    // Add subscriber to main group if groupId is provided
+    // In MailerLite, groups are the primary segmentation mechanism
     if (groupId && subscriberId) {
       try {
         const groupResponse = await fetch(
@@ -138,7 +182,11 @@ exports.handler = async (event) => {
         );
 
         if (!groupResponse.ok) {
-          console.warn('Failed to add subscriber to group:', await groupResponse.text());
+          const errorText = await groupResponse.text();
+          console.warn('Failed to add subscriber to group:', groupResponse.status, errorText);
+          // Don't fail the whole request, but log it for debugging
+        } else {
+          console.log('Subscriber added to group:', groupId);
         }
       } catch (groupError) {
         console.warn('Error adding subscriber to group:', groupError);
@@ -146,44 +194,14 @@ exports.handler = async (event) => {
       }
     }
 
-    // Assign tags if provided
-    if (tags && Array.isArray(tags) && tags.length > 0 && subscriberId) {
-      for (const tagName of tags) {
-        try {
-          // First, find or create the tag
-          // MailerLite API requires tag ID, so we need to search for it first
-          const tagSearchResponse = await fetch(
-            `https://connect.mailerlite.com/api/groups?filter[name]=${encodeURIComponent(tagName)}`,
-            {
-              method: 'GET',
-              headers: {
-                'Authorization': `Bearer ${apiKey}`,
-              },
-            }
-          );
-
-          // If tag search fails, we'll try to assign by name using the upsert approach
-          // by adding to a group (MailerLite treats groups as tags in some contexts)
-          
-          // Assign tag to subscriber
-          await fetch(
-            `https://connect.mailerlite.com/api/subscribers/${subscriberId}`,
-            {
-              method: 'PUT',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`,
-              },
-              body: JSON.stringify({
-                groups: [tagName], // This will create the group/tag if it doesn't exist
-              }),
-            }
-          );
-        } catch (tagError) {
-          console.warn(`Error assigning tag "${tagName}":`, tagError);
-          // Continue with other tags even if one fails
-        }
-      }
+    // Note: In MailerLite v2, "tags" are custom groups. If you want to segment by tags,
+    // create those as separate groups in your MailerLite account and pass the groupId here.
+    // The "tags" array parameter is informational; if you need to add subscribers to multiple
+    // groups, pass multiple groupIds in the request (this would require a schema change).
+    // For now, we only support one groupId per subscription.
+    
+    if (tags && Array.isArray(tags) && tags.length > 0) {
+      console.log('Tags provided:', tags.join(', '), '— Note: Use groupId for proper segmentation in MailerLite v2');
     }
 
     console.log('Subscriber added successfully:', subscriberResult.data?.email);

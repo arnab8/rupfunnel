@@ -6,6 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { UserProvider } from "@/contexts/UserContext";
 import { AdminProvider } from "@/contexts/AdminContext";
+import { ServerConfig, defaultServerConfig } from "@/types/config";
+import { initializeMetaPixel } from "@/lib/tracking";
 import Index from "./pages/Index";
 import Training from "./pages/Training";
 import Book from "./pages/Book";
@@ -18,31 +20,102 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const App = () => {
-  const [config, setConfig] = useState<any | null>(null);
+  const [config, setConfig] = useState<ServerConfig | null>(null);
+  const [configError, setConfigError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadConfig = async () => {
-      try {
-        const res = await fetch("/.netlify/functions/config");
-        const data = await res.json();
-        setConfig(data);
-      } catch (e) {
-        console.error("Failed to load config", e);
+      const maxRetries = 3;
+      let retries = 0;
+
+      while (retries < maxRetries) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+
+          const res = await fetch("/.netlify/functions/config", {
+            signal: controller.signal,
+          });
+
+          clearTimeout(timeoutId);
+
+          if (!res.ok) {
+            throw new Error(`Config endpoint returned ${res.status}`);
+          }
+
+          const data = await res.json();
+          console.log("Config loaded:", data);
+          
+          // Use config directly without strict validation for now
+          setConfig({
+            metaPixelId: data.metaPixelId || "",
+            headerCodeBlock: data.headerCodeBlock || "",
+            capiEnabled: data.capiEnabled || false,
+            mailerLiteApiKeyPresent: data.mailerLiteApiKeyPresent || false,
+            mailerLiteGroupId: data.mailerLiteGroupId || "",
+            wistiaEmbedCode: data.wistiaEmbedCode || "",
+            calComBookingSlug: data.calComBookingSlug || "",
+            homeThumbnailUrl: data.homeThumbnailUrl || "",
+            version: data.version || "1.0.0",
+          } as ServerConfig);
+          
+          // Initialize Meta Pixel if pixelId is available
+          if (data.metaPixelId) {
+            initializeMetaPixel(data.metaPixelId);
+          }
+
+          // If headerCodeBlock is present, inject it
+          if (data.headerCodeBlock) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = data.headerCodeBlock;
+            const scripts = tempDiv.querySelectorAll('script');
+            scripts.forEach(oldScript => {
+              const newScript = document.createElement('script');
+              Array.from(oldScript.attributes).forEach(attr => {
+                newScript.setAttribute(attr.name, attr.value);
+              });
+              if (oldScript.textContent) {
+                newScript.textContent = oldScript.textContent;
+              }
+              document.head.appendChild(newScript);
+            });
+          }
+
+          return;
+        } catch (e) {
+          retries++;
+          console.warn(`Config load attempt ${retries} failed:`, e);
+          
+          if (retries < maxRetries) {
+            // Exponential backoff: 1s, 2s, 4s
+            await new Promise(resolve => setTimeout(resolve, Math.pow(2, retries - 1) * 1000));
+          }
+        }
       }
+
+      // After all retries, use default config but show error
+      console.error("Failed to load config after 3 retries; using defaults");
+      setConfigError("Unable to load server configuration. Some features may be unavailable.");
+      setConfig(defaultServerConfig);
     };
+
     loadConfig();
   }, []);
 
-  if (!config) {
-    return <div>Loading...</div>;
+  if (config === null) {
+    return null;
   }
 
-  // later you can pass `config` into providers or pages if needed
   return (
     <QueryClientProvider client={queryClient}>
-      <AdminProvider>
+      <AdminProvider initialServerConfig={config}>
         <UserProvider>
           <TooltipProvider>
+            {configError && (
+              <div className="fixed top-0 left-0 right-0 bg-yellow-50 border-b border-yellow-200 p-3 text-sm text-yellow-800 z-50">
+                {configError}
+              </div>
+            )}
             <Toaster />
             <Sonner />
             <BrowserRouter>

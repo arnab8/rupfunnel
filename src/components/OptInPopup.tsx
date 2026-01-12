@@ -38,84 +38,84 @@ const OptInPopup: React.FC<OptInPopupProps> = ({ isOpen, onClose, onSubmit, isSu
 
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold text-foreground mb-2">
-            Watch Now For FREE!
+            Get Instant Access to the Training
           </h2>
           <p className="text-muted-foreground">
-            Enter your info, start watching the video immediately
+            Enter your details below to watch the exclusive briefing
           </p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <Label htmlFor="fullName" className="executive-label">
-              Full Name <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="fullName"
-              {...register('fullName')}
-              placeholder="Full Name"
-              className="executive-input"
-            />
-            {errors.fullName && (
-              <p className="text-destructive text-sm mt-1">{errors.fullName.message}</p>
-            )}
-          </div>
+            <div>
+              <Label htmlFor="fullName" className="executive-label">
+                Full Name <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="fullName"
+                {...register('fullName')}
+                placeholder="Full Name"
+                className="executive-input"
+              />
+              {errors.fullName && (
+                <p className="text-destructive text-sm mt-1">{errors.fullName.message}</p>
+              )}
+            </div>
 
-          <div>
-            <Label htmlFor="phone" className="executive-label">
-              Phone <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="phone"
-              type="tel"
-              {...register('phone')}
-              placeholder="Phone"
-              className="executive-input"
-            />
-            {errors.phone && (
-              <p className="text-destructive text-sm mt-1">{errors.phone.message}</p>
-            )}
-          </div>
+            <div>
+              <Label htmlFor="phone" className="executive-label">
+                Phone <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="phone"
+                type="tel"
+                {...register('phone')}
+                placeholder="Phone"
+                className="executive-input"
+              />
+              {errors.phone && (
+                <p className="text-destructive text-sm mt-1">{errors.phone.message}</p>
+              )}
+            </div>
 
-          <div>
-            <Label htmlFor="email" className="executive-label">
-              Email <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="email"
-              type="email"
-              {...register('email')}
-              placeholder="Email"
-              className="executive-input"
-            />
-            {errors.email && (
-              <p className="text-destructive text-sm mt-1">{errors.email.message}</p>
-            )}
-          </div>
+            <div>
+              <Label htmlFor="email" className="executive-label">
+                Email <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                {...register('email')}
+                placeholder="Email"
+                className="executive-input"
+              />
+              {errors.email && (
+                <p className="text-destructive text-sm mt-1">{errors.email.message}</p>
+              )}
+            </div>
 
-          <div>
-            <Label htmlFor="jobRole" className="executive-label">
-              Mention Your Current Designation <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="jobRole"
-              {...register('jobRole')}
-              placeholder="Mention Your Current Designation"
-              className="executive-input"
-            />
-            {errors.jobRole && (
-              <p className="text-destructive text-sm mt-1">{errors.jobRole.message}</p>
-            )}
-          </div>
+            <div>
+              <Label htmlFor="jobRole" className="executive-label">
+                Mention Your Current Designation <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="jobRole"
+                {...register('jobRole')}
+                placeholder="Mention Your Current Designation"
+                className="executive-input"
+              />
+              {errors.jobRole && (
+                <p className="text-destructive text-sm mt-1">{errors.jobRole.message}</p>
+              )}
+            </div>
 
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full executive-button mt-6"
-          >
-            {isSubmitting ? 'Processing...' : 'Watch Now for Free'}
-          </Button>
-        </form>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full executive-button mt-6"
+            >
+              {isSubmitting ? 'Processing...' : 'Click Here to Watch'}
+            </Button>
+          </form>
       </div>
     </div>
   );

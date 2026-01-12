@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/contexts/UserContext";
 import { useAdmin } from "@/contexts/AdminContext";
-import { captureUtmParams, triggerPixelEvent, getCookie } from "@/lib/tracking";
+import { captureUtmParams, triggerPixelEvent, getCookie, sendCapiEvent } from "@/lib/tracking";
 import { OptInFormData } from "@/lib/validation";
 import OptInPopup from "@/components/OptInPopup";
 import VideoThumbnail from "@/components/VideoThumbnail";
@@ -23,12 +23,13 @@ const Index: React.FC = () => {
   // They can watch the video again or click through to /training manually
 
   useEffect(() => {
-    // Show popup after delay
+    // Show popup after configurable delay (default 30 seconds)
+    const delay = (config.popupDelay || 30) * 1000;
     const timer = setTimeout(() => {
       if (!userData) {
         setIsPopupOpen(true);
       }
-    }, config.popupDelay * 1000);
+    }, delay);
 
     return () => clearTimeout(timer);
   }, [config.popupDelay, userData]);
@@ -94,11 +95,30 @@ const Index: React.FC = () => {
       // Save to context and localStorage
       setUserData(fullUserData);
 
-      // Trigger browser Lead event
+      // Trigger browser Lead event with enhanced matching fields
       triggerPixelEvent("Lead", {
         content_name: "VSL Opt-in",
         content_category: "Executive Training",
+        value: 0,
+        currency: "USD",
+        // Advanced matching fields
+        email: formData.email,
+        phone: formData.phone,
+        first_name: formData.fullName.split(" ")[0],
+        last_name: formData.fullName.split(" ").slice(1).join(" "),
+        ...(utmParams.utmCampaign && { utm_campaign: utmParams.utmCampaign }),
+        ...(utmParams.utmContent && { utm_content: utmParams.utmContent }),
       });
+
+      // Send to CAPI for server-side matching and deduplication
+      if (config.metaPixelId) {
+        await sendCapiEvent(
+          "Lead",
+          fullUserData,
+          config.metaPixelId,
+          config.leadCapiTestEnabled ? config.leadCapiTestEventCode : undefined
+        );
+      }
 
       // Navigate to training page
       navigate("/training");
@@ -115,9 +135,9 @@ const Index: React.FC = () => {
   };
 
   const benefits = [
-    "5 Secrets that most corporate leadership experts hide from you",
-    "8 Detailed case studies of executives taking bigger and more strategic roles",
-    "Discover the unique, science-backed system that's designed to elevate your executive presence, improve strategic decision-making, and position you for leadership roles in record time, without guesswork or frustration.",
+    "Why Most High Performers Stay Trapped in Burnout Without Realizing It",
+    "The 3 Costly Mistakes That Keep You Exhausted and Unfocused",
+    "The 3-Layer Recovery Framework to Rebuild Calm Energy and Fog",
   ];
 
   return (
@@ -127,38 +147,39 @@ const Index: React.FC = () => {
         <section className="py-8 sm:py-12 lg:py-16">
           <div className="executive-container text-center">
             <p className="text-primary font-semibold text-lg mb-4">
-              For Directors, AVPs, VPs & CXOs
+              Executive Briefing for Founders & Senior Corporate Leaders
             </p>
             <h1 className="executive-heading mb-4">
-              How to Unlock High Value Leadership Opportunities & Get Rid of
-              Your Career Plateau in 12 Weeks
+              The Neuroscience of Optimal Leadership Performance: How Great Leaders Stay Clear Under Pressure
             </h1>
-            <p className="executive-subheading max-w-3xl mx-auto mb-12">
-              Without Endless Certifications, Networking, Working Endlessly, or
-              Hoping & Praying for the Leadership Sun to Shine on You
+            <p className="executive-subheading max-w-3xl mx-auto mb-0">
+              If you've been running on caffeine, pressure, and sheer willpower this training reveals how to reset your brain, recharge your focus, and feel like yourself again.
             </p>
           </div>
         </section>
 
         {/* Content Section */}
-        <section className="pb-12 sm:pb-16 lg:pb-20">
+        <section className="pt-8 pb-12 sm:pb-16 lg:pb-20">
           <div className="executive-container">
-            <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
               {/* Video Thumbnail */}
               <div className="relative">
-                <VideoThumbnail onClick={handleCtaClick} />
+                <VideoThumbnail 
+                  onClick={handleCtaClick}
+                  thumbnailUrl={config.homeThumbnailUrl || undefined}
+                />
               </div>
 
               {/* Benefits List */}
               <div className="space-y-6">
-                <p className="text-lg font-medium text-foreground">
-                  In this short and to-the-point video, you're going to learn:
+                <p className="text-xl font-medium text-foreground">
+                  In this training you'll discover:
                 </p>
-                <ul className="space-y-4">
+                <ul className="space-y-5">
                   {benefits.map((benefit, index) => (
                     <li key={index} className="flex items-start gap-3">
                       <span className="mt-1.5 w-2 h-2 rounded-full bg-primary flex-shrink-0"></span>
-                      <span className="text-foreground">{benefit}</span>
+                      <span className="text-lg text-foreground">{benefit}</span>
                     </li>
                   ))}
                 </ul>

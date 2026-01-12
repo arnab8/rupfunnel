@@ -2,3 +2,8 @@
   command = "npm run build"
   functions = "netlify/functions"
   publish = "dist"
+
+[dev]
+  framework = "vite"
+  targetPort = 8080
+  port = 8888

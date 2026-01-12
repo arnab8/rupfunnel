@@ -1,12 +1,14 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@/contexts/UserContext';
-import { triggerPixelEvent } from '@/lib/tracking';
+import { useAdmin } from '@/contexts/AdminContext';
+import { triggerPixelEvent, sendCapiEvent } from '@/lib/tracking';
 import Footer from '@/components/Footer';
 import { CheckCircle } from 'lucide-react';
 
 const Congrats: React.FC = () => {
   const { userData, isLoaded } = useUser();
+  const { config } = useAdmin();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -18,12 +20,54 @@ const Congrats: React.FC = () => {
 
     // Trigger SubmitApplication event
     if (isLoaded && userData) {
+      // Browser pixel event with enhanced matching fields
       triggerPixelEvent('SubmitApplication', {
         content_name: 'Booking Completed',
         content_category: 'Executive Training',
+        value: 0,
+        currency: 'USD',
+        // Advanced matching
+        email: userData.email,
+        phone: userData.phone,
+        first_name: userData.fullName.split(' ')[0],
+        last_name: userData.fullName.split(' ').slice(1).join(' '),
       });
+
+      // CAPI event for server-side matching and deduplication
+      if (config.metaPixelId) {
+        sendCapiEvent(
+          'SubmitApplication',
+          userData,
+          config.metaPixelId,
+          config.applicationCapiTestEnabled ? config.applicationCapiTestEventCode : undefined
+        );
+      }
+
+      // Update MailerLite tag from "Lead" to "Application"
+      fetch('/.netlify/functions/update-subscriber-tag', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: userData.email,
+          removeFromGroup: 'Lead',
+          addToGroup: 'Application',
+        }),
+      })
+        .then(res => res.json())
+        .then(result => {
+          if (result.success) {
+            console.log('MailerLite tag updated: Lead → Application');
+          } else {
+            console.warn('Failed to update MailerLite tag:', result.error);
+          }
+        })
+        .catch(error => {
+          console.warn('Error updating MailerLite tag:', error);
+        });
     }
-  }, [isLoaded, userData, navigate]);
+  }, [isLoaded, userData, navigate, config]);
 
   if (!isLoaded) {
     return (
@@ -52,9 +96,15 @@ const Congrats: React.FC = () => {
 
             {/* Content */}
             <div className="space-y-6">
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground leading-tight">
-                Congratulations, your application is being reviewed.
-              </h1>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-6 h-6 text-green-500" />
+                  <p className="text-lg font-semibold text-green-600">Booking Confirmed</p>
+                </div>
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground leading-tight">
+                  Congratulations, your application is being reviewed.
+                </h1>
+              </div>
 
               <div className="space-y-6 mt-8">
                 <div className="p-6 bg-accent/50 border-l-4 border-primary rounded-r-lg">
