@@ -137,9 +137,9 @@ const Index: React.FC = () => {
   };
 
   const benefits = [
-    "Why Most High Performers Stay Trapped in Burnout Without Realizing It",
-    "The 3 Costly Mistakes That Keep You Exhausted and Unfocused",
-    "The 3-Layer Recovery Framework to Rebuild Calm Energy and Fog",
+    "Why Elite External Performance Breaks on Amateur Internal Systems",
+    "The Three Traps That Make Focus and Energy Unpredictable Under Pressure",
+    "The Performance Operating System™ for Reliable Clarity Under Pressure",
   ];
 
   return (
@@ -149,13 +149,13 @@ const Index: React.FC = () => {
         <section className="py-8 sm:py-12 lg:py-16">
           <div className="executive-container text-center">
             <p className="text-primary font-semibold text-lg mb-4">
-              Executive Briefing for Founders & Senior Corporate Leaders
+              Executive Briefing  for Founders, CXOs & Senior Leaders Operating Under Constant Pressure & Global Schedules
             </p>
             <h1 className="executive-heading mb-4">
-              The Neuroscience of Optimal Leadership Performance: How Great Leaders Stay Clear Under Pressure
+              The Neuroscience of Elite Composure: How great leaders keep their edge when pressure is designed to break them
             </h1>
             <p className="executive-subheading max-w-3xl mx-auto mb-0">
-              If you've been running on caffeine, pressure, and sheer willpower this training reveals how to reset your brain, recharge your focus, and feel like yourself again.
+              If your role puts money, people, reputation, or strategic outcomes at risk, this briefing explains how elite leaders maintain clarity, authority, and decision quality when the system turns hostile.
             </p>
           </div>
         </section>

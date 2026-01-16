@@ -82,7 +82,7 @@ const Book: React.FC = () => {
           ) : (
             <div className="bg-card rounded-lg shadow-lg p-8 text-center">
               <h2 className="text-2xl font-bold text-foreground mb-4">
-                Apply to Work with The First Time CEO
+                Apply to Work with Arnab Sinha
               </h2>
               <p className="text-muted-foreground mb-6">
                 Please configure the Cal.com booking slug in the admin dashboard
@@ -93,7 +93,7 @@ const Book: React.FC = () => {
               <div className="grid md:grid-cols-2 gap-8 text-left">
                 <div className="space-y-4">
                   <h3 className="font-semibold text-lg">
-                    Apply to Work with The First Time CEO
+                    Apply to Work with The Arnab Sinha
                   </h3>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <span>🕐</span> 60 Mins

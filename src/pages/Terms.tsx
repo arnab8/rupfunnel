@@ -28,7 +28,7 @@ const Terms: React.FC = () => {
             <h2 className="text-xl font-semibold text-foreground mt-8">Intellectual Property</h2>
             <p>
               All content, including but not limited to text, graphics, images, and videos, 
-              is the property of The First Time CEO and is protected by copyright laws.
+              is the property of The Arnab Sinha and is protected by copyright laws.
             </p>
             
             <h2 className="text-xl font-semibold text-foreground mt-8">Limitation of Liability</h2>
