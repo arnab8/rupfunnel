@@ -21,6 +21,7 @@ export interface AdminConfig {
   mailerLiteGroupId: string;
   wistiaEmbedCode: string;
   calComBookingSlug: string;
+  calComWhatsAppFieldIdentifier: string;
   
   // Thumbnail
   homeThumbnailUrl: string;
@@ -55,6 +56,7 @@ const defaultConfig: AdminConfig = {
   mailerLiteGroupId: '',
   wistiaEmbedCode: '',
   calComBookingSlug: 'the-first-time-ceo/strategy-session',
+  calComWhatsAppFieldIdentifier: '',
   homeThumbnailUrl: '', // Add thumbnail URL
   popupDelay: 30, // Show popup after 30 seconds (configurable in Admin panel)
   vslButtonDelay: parseInt(import.meta.env.VITE_VSL_BUTTON_DELAY || '30'),

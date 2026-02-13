@@ -314,18 +314,33 @@ const Admin: React.FC = () => {
                 <CardDescription>Configure your Cal.com booking integration</CardDescription>
               </CardHeader>
               <CardContent>
-                <div>
-                  <Label htmlFor="calComBookingSlug">Cal.com Booking Slug</Label>
-                  <Input
-                    id="calComBookingSlug"
-                    value={localConfig.calComBookingSlug}
-                    onChange={(e) => updateConfig('calComBookingSlug', e.target.value)}
-                    placeholder="username/event-type"
-                    className="mt-1"
-                  />
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Example: the-first-time-ceo/strategy-session
-                  </p>
+                <div className="space-y-5">
+                  <div>
+                    <Label htmlFor="calComBookingSlug">Cal.com Booking Slug</Label>
+                    <Input
+                      id="calComBookingSlug"
+                      value={localConfig.calComBookingSlug}
+                      onChange={(e) => updateConfig('calComBookingSlug', e.target.value)}
+                      placeholder="username/event-type"
+                      className="mt-1"
+                    />
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Example: the-first-time-ceo/strategy-session
+                    </p>
+                  </div>
+                  <div>
+                    <Label htmlFor="calComWhatsAppFieldIdentifier">WhatsApp Field Identifier (Optional)</Label>
+                    <Input
+                      id="calComWhatsAppFieldIdentifier"
+                      value={localConfig.calComWhatsAppFieldIdentifier}
+                      onChange={(e) => updateConfig('calComWhatsAppFieldIdentifier', e.target.value)}
+                      placeholder="whatsapp_number"
+                      className="mt-1"
+                    />
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Use the Cal.com booking question identifier to prefill a custom WhatsApp field.
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>

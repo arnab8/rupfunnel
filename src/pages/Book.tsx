@@ -4,6 +4,45 @@ import { useUser } from "@/contexts/UserContext";
 import { useAdmin } from "@/contexts/AdminContext";
 import Footer from "@/components/Footer";
 
+const inferTrafficCountry = (): "IN" | "US" => {
+  if (typeof window === "undefined") return "IN";
+
+  const browserLanguages = [navigator.language, ...(navigator.languages || [])]
+    .filter(Boolean)
+    .join(",");
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+
+  const isIndiaTraffic =
+    /(^|,)[a-z]{2}-IN\b/i.test(browserLanguages) ||
+    timezone === "Asia/Kolkata";
+
+  return isIndiaTraffic ? "IN" : "US";
+};
+
+const normalizePhoneForCal = (phone: string, trafficCountry: "IN" | "US"): string => {
+  const trimmed = phone.trim();
+  if (!trimmed) return "";
+
+  const digits = trimmed.replace(/\D/g, "");
+  if (!digits) return "";
+
+  if (trimmed.startsWith("+")) {
+    return `+${digits}`;
+  }
+
+  // If user already typed India country code without "+", preserve it.
+  if (digits.length === 12 && digits.startsWith("91")) {
+    return `+${digits}`;
+  }
+
+  // Default to traffic country when no explicit country code is provided.
+  if (digits.length === 10) {
+    return trafficCountry === "IN" ? `+91${digits}` : `+1${digits}`;
+  }
+
+  return `+${digits}`;
+};
+
 const Book: React.FC = () => {
   const { userData } = useUser();
   const { config } = useAdmin();
@@ -48,35 +87,49 @@ const Book: React.FC = () => {
 
     if (userData?.fullName) params.set("name", userData.fullName);
     if (userData?.email) params.set("email", userData.email);
-    if (userData?.phone) params.set("phone", userData.phone);
-    
+    if (userData?.phone) {
+      const trafficCountry = inferTrafficCountry();
+      const normalizedPhone = normalizePhoneForCal(userData.phone, trafficCountry);
+
+      // Keep legacy key and add Cal.com's documented phone-question key.
+      params.set("phone", normalizedPhone);
+      params.set("attendeePhoneNumber", normalizedPhone);
+
+      // For custom booking questions (e.g. a WhatsApp field), Cal.com expects the field identifier.
+      const whatsappIdentifier = config.calComWhatsAppFieldIdentifier?.trim();
+      if (whatsappIdentifier) {
+        params.set(whatsappIdentifier, normalizedPhone);
+      }
+    }
+
     // Add redirect URL to go to congrats page after booking
     const redirectUrl = `${window.location.origin}/congrats`;
     params.set("redirectUrl", redirectUrl);
 
     const queryString = params.toString();
     return queryString ? `${baseUrl}?${queryString}` : baseUrl;
-  }, [config.calComBookingSlug, userData, isEmbedCode]);
+  }, [config.calComBookingSlug, config.calComWhatsAppFieldIdentifier, userData, isEmbedCode]);
+
+  const hasCalendarEmbed = isEmbedCode || Boolean(calComUrl);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <main className="flex-1 py-8 sm:py-12">
-        <div className="max-w-5xl mx-auto px-4">
+      <main className={`flex-1 ${hasCalendarEmbed ? "py-0 sm:py-8" : "py-8 sm:py-12"}`}>
+        <div className={`${hasCalendarEmbed ? "max-w-none px-0 sm:max-w-5xl sm:mx-auto sm:px-4" : "max-w-5xl mx-auto px-4"}`}>
           {isEmbedCode ? (
             // Render raw embed code with script execution
             <div
               ref={embedContainerRef}
-              className="bg-card rounded-lg shadow-lg overflow-hidden min-h-[700px]"
+              className="bg-card overflow-hidden min-h-[100dvh] sm:min-h-[800px] sm:rounded-lg sm:shadow-lg [&_iframe]:w-full [&_iframe]:min-h-[100dvh] sm:[&_iframe]:min-h-[800px]"
             />
           ) : calComUrl ? (
-            <div className="bg-card rounded-lg shadow-lg overflow-hidden">
+            <div className="bg-card overflow-hidden min-h-[100dvh] sm:min-h-0 sm:rounded-lg sm:shadow-lg">
               <iframe
                 src={calComUrl}
-                width="100%"
-                height="700"
                 frameBorder="0"
                 title="Schedule a call"
-                className="w-full"
+                className="w-full h-[100dvh] sm:h-[850px]"
+                allow="camera; microphone; fullscreen; clipboard-read; clipboard-write"
               />
             </div>
           ) : (
@@ -116,10 +169,23 @@ const Book: React.FC = () => {
               </div>
             </div>
           )}
+
+          {!isEmbedCode && calComUrl && (
+            <div className="sm:hidden px-4 py-3 border-t border-border bg-background">
+              <a
+                href={calComUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="block w-full rounded-md border border-border px-4 py-3 text-center text-sm font-medium text-foreground"
+              >
+                Open booking in full-screen
+              </a>
+            </div>
+          )}
         </div>
       </main>
 
-      <Footer />
+      {!hasCalendarEmbed && <Footer />}
     </div>
   );
 };
