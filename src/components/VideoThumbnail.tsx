@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Play } from 'lucide-react';
 
 interface VideoThumbnailProps {
@@ -7,19 +7,54 @@ interface VideoThumbnailProps {
 }
 
 const VideoThumbnail: React.FC<VideoThumbnailProps> = ({ onClick, thumbnailUrl }) => {
+  const [resolvedThumbnailUrl, setResolvedThumbnailUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!thumbnailUrl) {
+      setResolvedThumbnailUrl(null);
+      return;
+    }
+
+    let cancelled = false;
+    const img = new Image();
+
+    // Clear old image immediately so previous thumbnail never flashes.
+    setResolvedThumbnailUrl(null);
+
+    img.onload = () => {
+      if (!cancelled) {
+        setResolvedThumbnailUrl(thumbnailUrl);
+      }
+    };
+
+    img.onerror = () => {
+      if (!cancelled) {
+        setResolvedThumbnailUrl(null);
+      }
+    };
+
+    img.src = thumbnailUrl;
+
+    return () => {
+      cancelled = true;
+    };
+  }, [thumbnailUrl]);
+
   return (
     <div 
-      className="video-thumbnail aspect-video bg-gradient-to-br from-yellow-300 to-yellow-400 cursor-pointer group"
+      className="video-thumbnail aspect-video cursor-pointer group"
       onClick={onClick}
     >
-      {thumbnailUrl ? (
+      {resolvedThumbnailUrl ? (
         <img 
-          src={thumbnailUrl} 
+          src={resolvedThumbnailUrl}
           alt="Video thumbnail" 
           className="w-full h-full object-cover"
         />
+      ) : thumbnailUrl ? (
+        <div className="w-full h-full bg-muted" />
       ) : (
-        <div className="w-full h-full flex items-center justify-center relative">
+        <div className="w-full h-full flex items-center justify-center relative bg-gradient-to-br from-yellow-300 to-yellow-400">
           {/* CEO Logo placeholder */}
           <div className="absolute top-4 left-4 flex items-center gap-2">
             <div className="w-8 h-8 bg-primary rounded flex items-center justify-center">

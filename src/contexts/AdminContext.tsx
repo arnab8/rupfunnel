@@ -21,6 +21,7 @@ export interface AdminConfig {
   mailerLiteGroupId: string;
   wistiaEmbedCode: string;
   calComBookingSlug: string;
+  calComTextNotificationFieldIdentifier: string;
   calComWhatsAppFieldIdentifier: string;
   
   // Thumbnail
@@ -56,6 +57,7 @@ const defaultConfig: AdminConfig = {
   mailerLiteGroupId: '',
   wistiaEmbedCode: '',
   calComBookingSlug: 'the-first-time-ceo/strategy-session',
+  calComTextNotificationFieldIdentifier: '',
   calComWhatsAppFieldIdentifier: '',
   homeThumbnailUrl: '', // Add thumbnail URL
   popupDelay: 30, // Show popup after 30 seconds (configurable in Admin panel)

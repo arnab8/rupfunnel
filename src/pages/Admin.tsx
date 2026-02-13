@@ -329,6 +329,19 @@ const Admin: React.FC = () => {
                     </p>
                   </div>
                   <div>
+                    <Label htmlFor="calComTextNotificationFieldIdentifier">Text Notifications Field Identifier (Optional)</Label>
+                    <Input
+                      id="calComTextNotificationFieldIdentifier"
+                      value={localConfig.calComTextNotificationFieldIdentifier}
+                      onChange={(e) => updateConfig('calComTextNotificationFieldIdentifier', e.target.value)}
+                      placeholder="phone_text_notifications"
+                      className="mt-1"
+                    />
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Use the Cal.com booking question identifier for the Phone number (Text notifications) field.
+                    </p>
+                  </div>
+                  <div>
                     <Label htmlFor="calComWhatsAppFieldIdentifier">WhatsApp Field Identifier (Optional)</Label>
                     <Input
                       id="calComWhatsAppFieldIdentifier"

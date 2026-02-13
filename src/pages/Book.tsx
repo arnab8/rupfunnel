@@ -95,6 +95,12 @@ const Book: React.FC = () => {
       params.set("phone", normalizedPhone);
       params.set("attendeePhoneNumber", normalizedPhone);
 
+      // For custom booking questions (e.g. text notifications), Cal.com expects the field identifier.
+      const textNotificationIdentifier = config.calComTextNotificationFieldIdentifier?.trim();
+      if (textNotificationIdentifier) {
+        params.set(textNotificationIdentifier, normalizedPhone);
+      }
+
       // For custom booking questions (e.g. a WhatsApp field), Cal.com expects the field identifier.
       const whatsappIdentifier = config.calComWhatsAppFieldIdentifier?.trim();
       if (whatsappIdentifier) {
@@ -108,7 +114,13 @@ const Book: React.FC = () => {
 
     const queryString = params.toString();
     return queryString ? `${baseUrl}?${queryString}` : baseUrl;
-  }, [config.calComBookingSlug, config.calComWhatsAppFieldIdentifier, userData, isEmbedCode]);
+  }, [
+    config.calComBookingSlug,
+    config.calComTextNotificationFieldIdentifier,
+    config.calComWhatsAppFieldIdentifier,
+    userData,
+    isEmbedCode,
+  ]);
 
   const hasCalendarEmbed = isEmbedCode || Boolean(calComUrl);
 
