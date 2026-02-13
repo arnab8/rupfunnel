@@ -128,6 +128,12 @@ const Book: React.FC = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <main className={`flex-1 ${hasCalendarEmbed ? "py-0 sm:py-8" : "py-8 sm:py-12"}`}>
         <div className={`${hasCalendarEmbed ? "max-w-none px-0 sm:max-w-5xl sm:mx-auto sm:px-4" : "max-w-5xl mx-auto px-4"}`}>
+          {hasCalendarEmbed && (
+            <div className="sm:hidden px-4 py-3 border-b border-border bg-background text-xs text-muted-foreground">
+              Scroll inside the booking form and complete all required fields before tapping confirm.
+            </div>
+          )}
+
           {isEmbedCode ? (
             // Render raw embed code with script execution
             <div
@@ -179,19 +185,6 @@ const Book: React.FC = () => {
                   </p>
                 </div>
               </div>
-            </div>
-          )}
-
-          {!isEmbedCode && calComUrl && (
-            <div className="sm:hidden px-4 py-3 border-t border-border bg-background">
-              <a
-                href={calComUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="block w-full rounded-md border border-border px-4 py-3 text-center text-sm font-medium text-foreground"
-              >
-                Open booking in full-screen
-              </a>
             </div>
           )}
         </div>
