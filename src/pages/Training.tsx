@@ -132,11 +132,11 @@ const Training: React.FC = () => {
           <section className="py-2 sm:py-4 lg:py-6">
             <div className="text-center">
               <h1 className="executive-heading mb-4">
-                The operating system that separates reactive leaders from calm, dominant decision-makers
+                The protocol that separates leaders who degrade under pressure from those whose system holds when the load peaks
               </h1>
               <p className="executive-subheading max-w-3xl mx-auto mb-0">
-                By the end of this 17-minute video, you will see how top performers train their biology and mind to stay
-                composed and powerful under sustained pressure.
+                By the end of this video, you will understand exactly why your system degrades under pressure — and the
+                three-phase protocol that trains your biology to hold when it matters most.
               </p>
             </div>
           </section>

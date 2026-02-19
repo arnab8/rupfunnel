@@ -137,9 +137,9 @@ const Index: React.FC = () => {
   };
 
   const benefits = [
-    "Why Elite External Performance Breaks on Amateur Internal Systems",
-    "The Three Traps That Make Focus and Energy Unpredictable Under Pressure",
-    "The Performance Operating System™ for Reliable Clarity Under Pressure",
+    "Why performance volatility is a hardware failure and why willpower will never fix it",
+    "The reason your existing solutions collapse under maximum load",
+    "The three-phase engineering protocol that raises your ceiling permanently",
   ];
 
   return (
@@ -152,7 +152,7 @@ const Index: React.FC = () => {
               Executive Briefing  for Founders, CXOs & Senior Leaders Operating Under Constant Pressure & Global Schedules
             </p>
             <h1 className="executive-heading mb-4">
-              The Neuroscience of Elite Composure: How great leaders keep their edge when pressure is designed to break them
+              How To Stop Your Judgement From Failing At The Worst Possible Moment In 10 Weeks Without Willpower, Therapy, or Mindset Hacks
             </h1>
             <p className="executive-subheading max-w-3xl mx-auto mb-0">
               If your role puts money, people, reputation, or strategic outcomes at risk, this briefing explains how elite leaders maintain clarity, authority, and decision quality when the system turns hostile.
