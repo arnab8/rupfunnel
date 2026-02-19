@@ -152,7 +152,7 @@ const Index: React.FC = () => {
               Executive Briefing  for Founders, CXOs & Senior Leaders Operating Under Constant Pressure & Global Schedules
             </p>
             <h1 className="executive-heading mb-4">
-              How To Stop Your Judgement From Failing At The Worst Possible Moment In 10 Weeks Without Willpower, Therapy, or Mindset Hacks
+              How Founders And CXOs Can Stop Their Judgment From Failing At The Highest‑Stakes Moments In 10 Weeks – Without Willpower, Therapy, or Mindset Hacks
             </h1>
             <p className="executive-subheading max-w-3xl mx-auto mb-0">
               If your role puts money, people, reputation, or strategic outcomes at risk, this briefing explains how elite leaders maintain clarity, authority, and decision quality when the system turns hostile.
