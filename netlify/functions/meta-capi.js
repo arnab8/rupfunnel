@@ -6,7 +6,8 @@
  * Conversion API for improved event matching and deduplication.
  * 
  * IMPORTANT: Set these environment variables in Netlify Dashboard:
- * - META_PIXEL_ID: Your Meta Pixel ID (from Business Manager)
+ * - META_DATASET_ID: Your Meta dataset ID (pixel ID also works for web events)
+ * - META_PIXEL_ID: Optional fallback if META_DATASET_ID is not set
  * - META_CAPI_ACCESS_TOKEN: Your CAPI Access Token (with ads_management scope)
  * 
  * Get CAPI token from: https://www.facebook.com/business/help/503306463479099
@@ -84,11 +85,11 @@ exports.handler = async (event) => {
     };
   }
 
-  const pixelId = process.env.META_PIXEL_ID;
+  const datasetId = process.env.META_DATASET_ID || process.env.META_PIXEL_ID;
   const accessToken = process.env.META_CAPI_ACCESS_TOKEN;
 
-  if (!pixelId || !accessToken) {
-    console.error('Missing META_PIXEL_ID or META_CAPI_ACCESS_TOKEN');
+  if (!datasetId || !accessToken) {
+    console.error('Missing META_DATASET_ID/META_PIXEL_ID or META_CAPI_ACCESS_TOKEN');
     return {
       statusCode: 500,
       headers,
@@ -109,8 +110,8 @@ exports.handler = async (event) => {
       eventTime,
       sourceUrl,
       userAgent: frontendUserAgent,
-      deviceFingerprint,
       externalId,
+      customData,
     } = body;
 
     if (!eventName) {
@@ -125,8 +126,9 @@ exports.handler = async (event) => {
     const clientIp = getClientIp(event);
     const serverUserAgent = event.headers['user-agent'] || frontendUserAgent || '';
 
-    // Prepare hashed user data for CAPI
-    // CAPI expects normalized + hashed PII for better matching
+    // Prepare user data for CAPI:
+    // - PII fields must be normalized + SHA-256 hashed
+    // - client_ip_address/client_user_agent must be plain text (not hashed)
     const hashedUserData = {
       // Email (hashed on frontend, but we re-hash server-side for confirmation)
       em: userData?.em || (await hashValue(userData?.email || '')),
@@ -143,11 +145,10 @@ exports.handler = async (event) => {
       // External ID (usually email, hashed) or provided externalId
       external_id: externalId ? await hashValue(normalizeEmail(externalId)) : (userData?.external_id || (await hashValue(normalizeEmail(userData?.email || '')))),
       
-      // IP address (hashed) - server provides authoritative value
-      ...(clientIp && { ge: await hashValue(clientIp) }),
+      // Server-provided request context improves Event Match Quality
+      ...(clientIp && { client_ip_address: clientIp }),
       
-      // User agent (browser info, hashed) - server provides authoritative value
-      ...(serverUserAgent && { ua: await hashValue(serverUserAgent) }),
+      ...(serverUserAgent && { client_user_agent: serverUserAgent }),
       
       // First-party identifiers (from Meta's pixel cookies)
       ...(userData?.fbp && { fbp: userData.fbp }),
@@ -169,29 +170,22 @@ exports.handler = async (event) => {
       user_data: hashedUserData,
       
       // Event ID (for deduplication with browser pixel)
-      event_id: eventId || '',
+      ...(eventId && { event_id: eventId }),
       
       // Custom data (optional contextual info)
       custom_data: {
-        currency: userData?.currency || 'USD',
-        value: userData?.value || 0,
-        ...(deviceFingerprint && {
-          screen_resolution: deviceFingerprint.screen_resolution,
-          browser_language: deviceFingerprint.browser_language,
-          timezone: deviceFingerprint.timezone,
-          device_type: deviceFingerprint.device_type,
-        }),
+        currency: customData?.currency || 'USD',
+        value: customData?.value || 0,
+        ...(customData?.content_name && { content_name: customData.content_name }),
+        ...(customData?.content_category && { content_category: customData.content_category }),
+        ...(customData?.utm_campaign && { utm_campaign: customData.utm_campaign }),
+        ...(customData?.utm_content && { utm_content: customData.utm_content }),
       },
     };
 
-    // If testEventCode provided, add it for validation
-    if (testEventCode) {
-      capiEvent.test_event_code = testEventCode;
-    }
-
     // Send to Meta CAPI
     const capiResponse = await fetch(
-      `https://graph.facebook.com/v18.0/${pixelId}/events`,
+      `https://graph.facebook.com/v18.0/${datasetId}/events`,
       {
         method: 'POST',
         headers: {
@@ -200,6 +194,7 @@ exports.handler = async (event) => {
         body: JSON.stringify({
           data: [capiEvent],
           access_token: accessToken,
+          ...(testEventCode && { test_event_code: testEventCode }),
         }),
       }
     );

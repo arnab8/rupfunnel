@@ -24,6 +24,16 @@ const Training: React.FC = () => {
     setShowButton(true);
   }, []);
 
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.text = "fbq('track', 'Lead');";
+    document.head.appendChild(script);
+
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, []);
+
   const handleApplyNow = () => {
     navigate("/book");
   };

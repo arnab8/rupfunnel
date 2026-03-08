@@ -1,13 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@/contexts/UserContext';
-import { useAdmin } from '@/contexts/AdminContext';
-import { triggerPixelEvent, sendCapiEvent } from '@/lib/tracking';
 import Footer from '@/components/Footer';
 
 const Congrats: React.FC = () => {
   const { userData, isLoaded } = useUser();
-  const { config } = useAdmin();
   const navigate = useNavigate();
   const [profileSrc, setProfileSrc] = useState('/profile.jpg');
 
@@ -39,28 +36,14 @@ const Congrats: React.FC = () => {
 
     // Trigger SubmitApplication event
     if (isLoaded && userData) {
-      // Browser pixel event with enhanced matching fields
-      triggerPixelEvent('SubmitApplication', {
-        content_name: 'Booking Completed',
-        content_category: 'Executive Training',
-        value: 0,
-        currency: 'USD',
-        // Advanced matching
-        email: userData.email,
-        phone: userData.phone,
-        first_name: userData.fullName.split(' ')[0],
-        last_name: userData.fullName.split(' ').slice(1).join(' '),
-      });
-
-      // CAPI event for server-side matching and deduplication
-      if (config.metaPixelId) {
-        sendCapiEvent(
-          'SubmitApplication',
-          userData,
-          config.metaPixelId,
-          config.applicationCapiTestEnabled ? config.applicationCapiTestEventCode : undefined
-        );
-      }
+      const script = document.createElement('script');
+      const storedEventId = sessionStorage.getItem('submit_application_event_id');
+      const dedupEventId = storedEventId?.replace(/[^a-zA-Z0-9_-]/g, '') || '';
+      script.text = dedupEventId
+        ? `fbq('track', 'SubmitApplication', {}, {eventID: '${dedupEventId}'});`
+        : "fbq('track', 'SubmitApplication');";
+      document.head.appendChild(script);
+      sessionStorage.removeItem('submit_application_event_id');
 
       // Update MailerLite tag from "Lead" to "Application"
       fetch('/.netlify/functions/update-subscriber-tag', {
@@ -85,8 +68,12 @@ const Congrats: React.FC = () => {
         .catch(error => {
           console.warn('Error updating MailerLite tag:', error);
         });
+
+      return () => {
+        document.head.removeChild(script);
+      };
     }
-  }, [isLoaded, userData, config]);
+  }, [isLoaded, userData]);
 
   if (!isLoaded) {
     return (

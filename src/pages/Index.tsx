@@ -97,8 +97,7 @@ const Index: React.FC = () => {
       // Save to context and localStorage
       setUserData(fullUserData);
 
-      // Trigger browser Lead event with enhanced matching fields
-      triggerPixelEvent("Lead", {
+      const leadEventData = {
         content_name: "VSL Opt-in",
         content_category: "Executive Training",
         value: 0,
@@ -110,7 +109,10 @@ const Index: React.FC = () => {
         last_name: formData.fullName.split(" ").slice(1).join(" "),
         ...(utmParams.utmCampaign && { utm_campaign: utmParams.utmCampaign }),
         ...(utmParams.utmContent && { utm_content: utmParams.utmContent }),
-      });
+      };
+
+      // Trigger browser Lead event with enhanced matching fields
+      const leadEventId = triggerPixelEvent("Lead", leadEventData);
 
       // Send to CAPI for server-side matching and deduplication
       if (config.metaPixelId) {
@@ -118,7 +120,9 @@ const Index: React.FC = () => {
           "Lead",
           fullUserData,
           config.metaPixelId,
-          config.leadCapiTestEnabled ? config.leadCapiTestEventCode : undefined
+          config.leadCapiTestEnabled ? config.leadCapiTestEventCode : undefined,
+          leadEventId || undefined,
+          leadEventData
         );
       }
 

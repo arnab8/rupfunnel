@@ -130,14 +130,15 @@ export function getDeviceFingerprint() {
 export function triggerPixelEvent(
   eventName: string,
   params: Record<string, unknown> = {},
-  advancedMatching?: Record<string, unknown>
+  advancedMatching?: Record<string, unknown>,
+  eventId?: string
 ) {
   if (typeof window === 'undefined' || !(window as any).fbq) {
     console.warn(`triggerPixelEvent: fbq not available for event ${eventName}`);
     return null;
   }
 
-  const eventId = generateEventId();
+  const resolvedEventId = eventId || generateEventId();
 
   // Combine standard params with advanced matching data
   const eventData = {
@@ -145,10 +146,10 @@ export function triggerPixelEvent(
     ...advancedMatching,
   };
 
-  (window as any).fbq('track', eventName, eventData, { eventID: eventId });
-  console.log(`Pixel event tracked: ${eventName}`, eventId);
+  (window as any).fbq('track', eventName, eventData, { eventID: resolvedEventId });
+  console.log(`Pixel event tracked: ${eventName}`, resolvedEventId);
 
-  return eventId;
+  return resolvedEventId;
 }
 
 /**
@@ -167,7 +168,9 @@ export async function sendCapiEvent(
   eventName: string,
   userData: UserData,
   pixelId: string,
-  testEventCode?: string
+  testEventCode?: string,
+  eventId?: string,
+  customData?: Record<string, unknown>
 ) {
   if (!pixelId) {
     console.warn('sendCapiEvent: pixelId is required');
@@ -176,8 +179,7 @@ export async function sendCapiEvent(
 
   try {
     const formattedData = await formatUserDataForMeta(userData);
-    const eventId = generateEventId();
-    const deviceFingerprint = getDeviceFingerprint();
+    const resolvedEventId = eventId || generateEventId();
 
     const response = await fetch('/.netlify/functions/meta-capi', {
       method: 'POST',
@@ -188,12 +190,12 @@ export async function sendCapiEvent(
         eventName,
         userData: formattedData,
         testEventCode: testEventCode || undefined,
-        eventId,
+        eventId: resolvedEventId,
         eventTime: Math.floor(Date.now() / 1000),
         sourceUrl: window.location.href,
         userAgent: navigator.userAgent,
-        deviceFingerprint,
         externalId: (userData as any).externalId || undefined,
+        customData: customData || {},
       }),
     });
 
@@ -204,8 +206,8 @@ export async function sendCapiEvent(
     }
 
     const result = await response.json();
-    console.log('CAPI event sent successfully:', eventName, eventId);
-    return eventId;
+    console.log('CAPI event sent successfully:', eventName, resolvedEventId, result);
+    return resolvedEventId;
   } catch (error) {
     console.error('CAPI event error:', error);
     return null;
@@ -225,12 +227,14 @@ export async function trackEventWithCapi(
   pixelEventData?: Record<string, unknown>,
   testEventCode?: string
 ) {
+  const eventId = generateEventId();
+
   // Fire browser pixel
-  const pixelEventId = triggerPixelEvent(eventName, pixelEventData);
+  const pixelEventId = triggerPixelEvent(eventName, pixelEventData, undefined, eventId);
 
   // Send to CAPI with same event ID for deduplication
   // Allow pixel event to fire regardless of CAPI success
-  await sendCapiEvent(eventName, userData, pixelId, testEventCode);
+  await sendCapiEvent(eventName, userData, pixelId, testEventCode, eventId, pixelEventData);
 
   return pixelEventId;
 }

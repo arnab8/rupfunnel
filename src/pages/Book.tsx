@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/contexts/UserContext";
 import { useAdmin } from "@/contexts/AdminContext";
+import { generateEventId, sendCapiEvent } from "@/lib/tracking";
 import Footer from "@/components/Footer";
 
 const inferTrafficCountry = (): "IN" | "US" => {
@@ -48,19 +49,46 @@ const Book: React.FC = () => {
   const { config } = useAdmin();
   const navigate = useNavigate();
   const embedContainerRef = useRef<HTMLDivElement>(null);
+  const hasTrackedSubmitApplicationRef = useRef(false);
 
   // Listen for Cal.com booking events
   useEffect(() => {
+    const handleBookingComplete = async () => {
+      if (hasTrackedSubmitApplicationRef.current) return;
+      hasTrackedSubmitApplicationRef.current = true;
+
+      if (userData && config.metaPixelId) {
+        const eventId = generateEventId();
+        sessionStorage.setItem("submit_application_event_id", eventId);
+
+        await sendCapiEvent(
+          "SubmitApplication",
+          userData,
+          config.metaPixelId,
+          config.applicationCapiTestEnabled ? config.applicationCapiTestEventCode : undefined,
+          eventId,
+          {
+            content_name: "Booking Completed",
+            content_category: "Executive Training",
+            value: 0,
+            currency: "USD",
+          }
+        );
+      }
+
+      navigate("/congrats");
+    };
+
     const handleMessage = (event: MessageEvent) => {
       // Cal.com sends booking completion via postMessage
       if (event.data?.event === "booking_complete" || event.data?.action === "booking.created") {
-        navigate("/congrats");
+        void handleBookingComplete();
       }
     };
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [navigate]);
+  }, [config, navigate, userData]);
 
   // Check if the calComBookingSlug looks like embed code (contains HTML tags)
   const isEmbedCode =
