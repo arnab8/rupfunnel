@@ -1,7 +1,5 @@
 import { UserData } from '@/contexts/UserContext';
 
-const FORCED_META_TEST_EVENT_CODE = 'TEST43218';
-
 declare global {
   interface Window {
     fbq?: (event: string, name: string, data?: Record<string, unknown>, options?: Record<string, unknown>) => void;
@@ -191,7 +189,7 @@ export async function sendCapiEvent(
       body: JSON.stringify({
         eventName,
         userData: formattedData,
-        testEventCode: testEventCode || FORCED_META_TEST_EVENT_CODE,
+        testEventCode: testEventCode || undefined,
         eventId: resolvedEventId,
         eventTime: Math.floor(Date.now() / 1000),
         sourceUrl: window.location.href,
