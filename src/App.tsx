@@ -7,7 +7,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { UserProvider } from "@/contexts/UserContext";
 import { AdminProvider } from "@/contexts/AdminContext";
 import { ServerConfig, defaultServerConfig } from "@/types/config";
-import { initializeMetaPixel } from "@/lib/tracking";
 import Index from "./pages/Index";
 import Training from "./pages/Training";
 import Book from "./pages/Book";
@@ -60,11 +59,6 @@ const App = () => {
             homeThumbnailUrl: data.homeThumbnailUrl || "",
             version: data.version || "1.0.0",
           } as ServerConfig);
-          
-          // Initialize Meta Pixel if pixelId is available
-          if (data.metaPixelId) {
-            initializeMetaPixel(data.metaPixelId);
-          }
 
           // If headerCodeBlock is present, inject it
           if (data.headerCodeBlock) {
