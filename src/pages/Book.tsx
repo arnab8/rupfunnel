@@ -57,14 +57,15 @@ const Book: React.FC = () => {
       if (hasTrackedSubmitApplicationRef.current) return;
       hasTrackedSubmitApplicationRef.current = true;
 
-      if (userData && config.metaPixelId) {
+      if (userData) {
         const eventId = generateEventId();
         sessionStorage.setItem("submit_application_event_id", eventId);
+        const capiPixelId = config.metaPixelId || "907493832199906";
 
         await sendCapiEvent(
           "SubmitApplication",
           userData,
-          config.metaPixelId,
+          capiPixelId,
           config.applicationCapiTestEnabled ? config.applicationCapiTestEventCode : undefined,
           eventId,
           {

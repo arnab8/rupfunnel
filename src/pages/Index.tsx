@@ -114,17 +114,17 @@ const Index: React.FC = () => {
       // Trigger browser Lead event with enhanced matching fields
       const leadEventId = triggerPixelEvent("Lead", leadEventData);
 
-      // Send to CAPI for server-side matching and deduplication
-      if (config.metaPixelId) {
-        await sendCapiEvent(
-          "Lead",
-          fullUserData,
-          config.metaPixelId,
-          config.leadCapiTestEnabled ? config.leadCapiTestEventCode : undefined,
-          leadEventId || undefined,
-          leadEventData
-        );
-      }
+      // Send to CAPI for server-side matching and deduplication.
+      // Fallback pixel ID keeps CAPI active even if admin/server config field is empty.
+      const capiPixelId = config.metaPixelId || "907493832199906";
+      await sendCapiEvent(
+        "Lead",
+        fullUserData,
+        capiPixelId,
+        config.leadCapiTestEnabled ? config.leadCapiTestEventCode : undefined,
+        leadEventId || undefined,
+        leadEventData
+      );
 
       // Navigate to training page
       navigate("/training");
