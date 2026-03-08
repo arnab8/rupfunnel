@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@/contexts/UserContext';
+import { useAdmin } from '@/contexts/AdminContext';
+import { generateEventId, sendCapiEvent } from '@/lib/tracking';
 import Footer from '@/components/Footer';
 
 const Congrats: React.FC = () => {
   const { userData, isLoaded } = useUser();
+  const { config } = useAdmin();
   const navigate = useNavigate();
   const [profileSrc, setProfileSrc] = useState('/profile.jpg');
 
@@ -36,12 +39,26 @@ const Congrats: React.FC = () => {
 
     // Trigger SubmitApplication event
     if (isLoaded && userData) {
-      const script = document.createElement('script');
       const storedEventId = sessionStorage.getItem('submit_application_event_id');
-      const dedupEventId = storedEventId?.replace(/[^a-zA-Z0-9_-]/g, '') || '';
-      script.text = dedupEventId
-        ? `fbq('track', 'SubmitApplication', {}, {eventID: '${dedupEventId}'});`
-        : "fbq('track', 'SubmitApplication');";
+      const dedupEventId = storedEventId?.replace(/[^a-zA-Z0-9_-]/g, '') || generateEventId();
+
+      const capiPixelId = config.metaPixelId || '907493832199906';
+      void sendCapiEvent(
+        'SubmitApplication',
+        userData,
+        capiPixelId,
+        config.applicationCapiTestEnabled ? config.applicationCapiTestEventCode : undefined,
+        dedupEventId,
+        {
+          content_name: 'Booking Completed',
+          content_category: 'Executive Training',
+          value: 0,
+          currency: 'USD',
+        }
+      );
+
+      const script = document.createElement('script');
+      script.text = `fbq('track', 'SubmitApplication', {}, {eventID: '${dedupEventId}'});`;
       document.head.appendChild(script);
       sessionStorage.removeItem('submit_application_event_id');
 
@@ -73,7 +90,7 @@ const Congrats: React.FC = () => {
         document.head.removeChild(script);
       };
     }
-  }, [isLoaded, userData]);
+  }, [config, isLoaded, userData]);
 
   if (!isLoaded) {
     return (
