@@ -24,8 +24,9 @@ const Congrats: React.FC = () => {
 
     const emailKey = userData.email?.toLowerCase().trim();
     const idempotencyKey = emailKey ? `executive_funnel_submit_application_sent_${emailKey}` : null;
+    const bypassIdempotency = config.applicationCapiTestEnabled;
 
-    if (idempotencyKey) {
+    if (idempotencyKey && !bypassIdempotency) {
       try {
         const alreadySent = localStorage.getItem(idempotencyKey);
         if (alreadySent) {
