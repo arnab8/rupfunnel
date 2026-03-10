@@ -60,7 +60,7 @@ const Index: React.FC = () => {
       };
 
       // Send to MailerLite via Netlify Function
-      // The MAILERLITE_API_KEY must be set in Netlify Dashboard → Site Settings → Environment Variables
+      // The MAILERLITE_API_KEY must be set in Netlify Dashboard â†’ Site Settings â†’ Environment Variables
       const subscribeResponse = await fetch("/.netlify/functions/subscribe", {
         method: "POST",
         headers: {
@@ -156,7 +156,7 @@ const Index: React.FC = () => {
               Executive Briefing  for Founders, CXOs & Senior Leaders Operating Under Constant Pressure & Global Schedules
             </p>
             <h1 className="executive-heading mb-4">
-              How Founders And CXOs Can Stop Their Judgment From Failing At The Highest‑Stakes Moments In 10 Weeks – Without Willpower, Therapy, or Mindset Hacks
+              How Founders, Leaders & CXOs Can Stop Their Judgment From Failing At Highest‑Stakes Moments In 10-12 Weeks – Without Willpower, Therapy, or Mindset Hacks
             </h1>
             <p className="executive-subheading max-w-3xl mx-auto mb-0">
               If your role puts money, people, reputation, or strategic outcomes at risk, this briefing explains how elite leaders maintain clarity, authority, and decision quality when the system turns hostile.
@@ -212,3 +212,4 @@ const Index: React.FC = () => {
 };
 
 export default Index;
+

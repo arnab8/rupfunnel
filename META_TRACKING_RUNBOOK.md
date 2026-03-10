@@ -1,109 +1,100 @@
-# Meta Pixel + CAPI Runbook (Non-Technical)
+# Meta Tracking Runbook
 
-This guide explains how to maintain Meta tracking in this app without touching code.
+This runbook covers Meta Pixel + CAPI operations for this app.
 
-## What is already configured
+## 1. Event Design in This App
 
-- `Lead` event:
-  - Browser Pixel fires when popup form is submitted on `/`
-  - Server CAPI fires immediately after, with the same `event_id` (dedup)
-- `SubmitApplication` event:
-  - Server CAPI fires on `/book` when booking is completed (before navigation)
-  - Browser Pixel fires on `/congrats` with the same `event_id` (dedup)
+- `PageView`
+  - Browser, base pixel in `index.html`
+- `Lead`
+  - Browser: popup form submit on `/`
+  - Server: CAPI on same submit, shared `event_id`
+- `SubmitApplication`
+  - Browser: `/congrats`
+  - Server: booking flow + congrats fallback, shared `event_id`
 
-## Where this is implemented (for developers)
+## 2. Required Netlify Variables
 
-- Browser + CAPI Lead flow: `src/pages/Index.tsx`
-- Booking CAPI flow before redirect: `src/pages/Book.tsx`
-- Browser SubmitApplication pixel in head: `src/pages/Congrats.tsx`
-- Shared tracking helpers: `src/lib/tracking.ts`
-- Server CAPI endpoint: `netlify/functions/meta-capi.js`
+- `META_PIXEL_ID`
+- `META_DATASET_ID`
+- `META_CAPI_ACCESS_TOKEN`
 
-## Required credentials and IDs
+Recommended:
 
-- Meta Dataset ID (or Pixel ID): `907493832199906`
-- CAPI access token: keep in Netlify env var only
+- Keep `META_PIXEL_ID` and `META_DATASET_ID` aligned unless your Meta setup requires otherwise.
 
-## Update order (important)
+## 3. Where Tracking Logic Lives
 
-1. Rotate/get a valid CAPI token in Meta Events Manager.
-2. Update Netlify environment variables.
-3. Deploy site.
-4. Enable test code in Admin (optional for testing).
-5. Run Lead and SubmitApplication test flows.
-6. Confirm in Meta Events Manager Test Events.
-7. Disable test mode after validation.
+- Browser base pixel:
+  - `index.html`
+- Lead flow:
+  - `src/pages/Index.tsx`
+- SubmitApplication flow:
+  - `src/pages/Book.tsx`
+  - `src/pages/Congrats.tsx`
+- Shared tracking helper:
+  - `src/lib/tracking.ts`
+- CAPI server endpoint:
+  - `netlify/functions/meta-capi.js`
 
-## Step 1: Update Netlify environment variables
+## 4. Test Procedure
 
-In Netlify -> Site settings -> Environment variables, set:
+### 4.1 Lead
 
-- `META_DATASET_ID=907493832199906`
-- `META_CAPI_ACCESS_TOKEN=<YOUR_NEW_TOKEN>`
+1. Open DevTools -> Network.
+2. Submit popup on `/`.
+3. Confirm:
+   - Browser request `facebook.com/tr?...ev=Lead`
+   - `POST /.netlify/functions/meta-capi`
+   - Response JSON includes:
+     - `success: true`
+     - `events_received: 1`
 
-Optional fallback:
+### 4.2 SubmitApplication
 
-- `META_PIXEL_ID=907493832199906`
+1. Go through `/book` and complete booking.
+2. Keep Network `Preserve log` enabled.
+3. Confirm:
+   - `POST /.netlify/functions/meta-capi` for `SubmitApplication`
+   - Browser `SubmitApplication` on `/congrats`
 
-Notes:
+## 5. Why You Might See Browser But Not Server in Meta UI
 
-- Never paste tokens into app code or Admin UI.
-- After saving env vars, trigger a new deploy.
+This can happen even when server delivery is working because:
 
-## Step 2: Optional Admin settings
+- Browser and server are deduplicated by `event_id`
+- Meta may attribute display to one source in UI
 
-In `/admin`:
+Use network + response payload as source of truth:
 
-- Tracking tab:
-  - `Meta Pixel ID` should match `907493832199906`
-- Events tab:
-  - For testing, turn on test mode and set a `Test Event Code` for:
-    - Lead
-    - SubmitApplication
+- `success: true`
+- `events_received: 1`
+- `fbtrace_id` present
 
-Click `Save Configuration`.
+## 6. Test Event Codes
 
-## Step 3: Verify Lead event (popup on `/`)
+- In test mode, set test codes via `/admin` Events tab.
+- Do not hardcode test event codes in code for production.
 
-1. Open site in incognito.
-2. Open DevTools -> Network.
-3. Go to `/`.
-4. Open and submit popup form.
-5. Confirm:
-   - Browser request to Facebook (pixel traffic).
-   - `POST /.netlify/functions/meta-capi` returns `200` with `"success": true`.
-6. In Meta Events Manager -> Test Events:
-   - `Lead` appears within ~10-60 seconds.
+## 7. Idempotency Behavior
 
-## Step 4: Verify SubmitApplication event (`/book` -> `/congrats`)
+- `SubmitApplication` uses localStorage idempotency by email to avoid duplicate production sends.
+- When Application CAPI test mode is enabled, idempotency is bypassed for easier repeated testing.
 
-1. Continue funnel to `/book`.
-2. Complete booking in Cal.com widget.
-3. Before/at redirect to `/congrats`, confirm in Network:
-   - `POST /.netlify/functions/meta-capi` for `SubmitApplication` returns `200`.
-4. On `/congrats`, browser pixel fires `SubmitApplication`.
-5. In Meta Events Manager -> Test Events:
-   - `SubmitApplication` appears.
+## 8. Troubleshooting
 
-## How deduplication works
+### `fbevents.js` blocked
 
-- Each event uses one shared `event_id` for browser + server.
-- Meta deduplicates duplicate copies of the same event automatically.
+- Disable browser tracking protection and ad blockers for testing
 
-## How to update later (quick checklist)
+### No `meta-capi` request in Network
 
-1. Change only token/ID in Netlify env vars.
-2. Redeploy.
-3. Re-run the two tests above.
-4. If events fail, check Netlify function logs for `meta-capi`.
+- Confirm user reaches actual submit path
+- For booking flow, use `Preserve log` due fast redirect
 
-## Troubleshooting
+### `meta-capi` returns error
 
-- `500` from `/.netlify/functions/meta-capi`:
-  - Missing/invalid `META_CAPI_ACCESS_TOKEN` or dataset/pixel ID.
-- Browser event appears but CAPI does not:
-  - Check Netlify env vars + function logs.
-- CAPI appears but browser does not:
-  - Verify pixel base code is present in `index.html`.
-- Events visible in browser but not in Meta:
-  - Wait up to 60 seconds; then check test code and selected dataset in Events Manager.
+- Validate Netlify vars
+- Rotate CAPI token if expired
+- Check Netlify function logs
+

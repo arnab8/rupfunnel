@@ -1,73 +1,73 @@
-# Welcome to your Lovable project
+# Rupfunnel
 
-## Project info
+Production-ready React + Netlify funnel app with:
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+- Homepage opt-in popup (`/`)
+- Training page (`/training`) with Wistia embed
+- Booking page (`/book`) with Cal.com
+- Confirmation page (`/congrats`)
+- Meta Pixel + Meta CAPI (browser + server dedup)
+- MailerLite subscriber + group tagging
 
-## How can I edit this code?
+## Start Here
 
-There are several ways of editing your application.
+If you are deploying this app for your own funnel, read these in order:
 
-**Use Lovable**
+1. [FUNNEL_SETUP_GUIDE.md](FUNNEL_SETUP_GUIDE.md)
+2. [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)
+3. [META_TRACKING_RUNBOOK.md](META_TRACKING_RUNBOOK.md)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## Local Development
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+For local Netlify Functions:
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+netlify dev
+```
 
-**Use GitHub Codespaces**
+## Core Integrations (where they live)
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- Meta CAPI function:
+  - `netlify/functions/meta-capi.js`
+- MailerLite subscribe function:
+  - `netlify/functions/subscribe.js`
+- MailerLite lead->application transition:
+  - `netlify/functions/update-subscriber-tag.js`
+- Lead event flow:
+  - `src/pages/Index.tsx`
+- SubmitApplication flow:
+  - `src/pages/Book.tsx` and `src/pages/Congrats.tsx`
+- Tracking helpers:
+  - `src/lib/tracking.ts`
+- Server config endpoint:
+  - `netlify/functions/config.js`
 
-## What technologies are used for this project?
+## Netlify Environment Variables (summary)
 
-This project is built with:
+Required:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- `META_PIXEL_ID`
+- `META_DATASET_ID`
+- `META_CAPI_ACCESS_TOKEN`
+- `MAILERLITE_API_KEY`
 
-## How can I deploy this project?
+Recommended:
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+- `MAILERLITE_GROUP_ID`
+- `WISTIA_EMBED_CODE`
+- `CAL_COM_BOOKING_SLUG`
+- `HOME_THUMBNAIL_URL`
 
-## Can I connect a custom domain to my Lovable project?
+Optional:
 
-Yes, you can!
+- `HEADER_HTML`
+- `CAPI_ENABLED`
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+Full instructions:
+- [FUNNEL_SETUP_GUIDE.md](FUNNEL_SETUP_GUIDE.md)
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
